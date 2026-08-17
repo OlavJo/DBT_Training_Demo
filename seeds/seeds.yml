@@ -1,0 +1,90 @@
+version: 2
+
+#  =============================================================================
+# SEEDS — and, just as importantly, what should NOT be a seed
+# =============================================================================
+# A seed is a CSV that lives in the repository and is loaded by `dbt seed`.
+# The right test for "should this be a seed?" is not size. It is:
+#
+# Is the git repository the system of record for this data?
+#
+# All three seeds below pass that test. They are small reference tables that
+# a person edits deliberately, in a pull request, with a reviewer.
+#
+# RAW.CUSTOMER would fit comfortably in a CSV — six rows — and must never be
+# a seed. Its system of record is the operational database. Modelling it as a
+# seed would mean `dbt seed --full-refresh` REPLACES the table wholesale,
+# which destroys precisely the ingestion behaviour this project exists to
+# demonstrate: no change detection, no snapshot, no history.
+#
+# Size is a coincidence. Ownership is the criterion.
+# =============================================================================
+
+seeds: 
+
+  - name: country_region 
+    description: > 
+        Maps ISO country codes to reporting regions and currencies. Owned by 
+        the finance team, changes perhaps twice a year, always by pull request. 
+    columns: 
+      - name: country 
+        description: Two-letter ISO country code. 
+        data_tests: 
+          - unique 
+          - not_null 
+      - name: region 
+        description: Reporting region used across all revenue analysis. 
+        data_tests: 
+          - not_null 
+      - name: currency_code 
+        description: ISO currency code for the country. 
+        data_tests: 
+          - not_null 
+          
+  - name: loyalty_tier_benefit 
+    description: > 
+        Loyalty programme configuration. Business-owned: the marketing team 
+        decides what GOLD is worth, and that decision belongs in version 
+        control where it can be reviewed and its history inspected. 
+    columns: 
+      - name: loyalty_tier 
+        description: Tier name, matching RAW.CUSTOMER.LOYALTY_TIER. 
+        data_tests: 
+          - unique 
+          - not_null 
+          - accepted_values: 
+              values: ['BRONZE', 'SILVER', 'GOLD', 'PLATINUM'] 
+      - name: tier_rank 
+        description: Ordinal rank, 1 = lowest. Use this to sort tiers. 
+        data_tests: 
+          - unique
+          - not_null 
+      - name: discount_pct 
+        description: Discount fraction applied at the till, 0.10 = 10%. 
+        data_tests: 
+          - not_null 
+          
+  - name: order_channel_map 
+    description: > 
+        Decodes the abbreviated channel codes the point-of-sale system emits 
+        into names a human can read. A textbook seed: the source system will 
+        never provide this, and hard-coding a CASE statement in a model would 
+        bury a business definition inside SQL where nobody can find it. 
+    columns: 
+      - name: channel_code description: Raw code as it arrives from the POS (WLKUP, MOB_APP, ...). 
+        data_tests: 
+          - unique 
+          - not_null 
+      - name: channel_name 
+        description: Human-readable channel name for reporting. 
+        data_tests: 
+          - not_null 
+      - name: is_digital 
+        description: True where the order was placed without staff involvement. 
+        data_tests: 
+          - not_null 
+      - name: channel_group 
+        description: Higher-level grouping — In Person or Remote. 
+        data_tests: 
+          - accepted_values: 
+              values: ['In Person', 'Remote']
