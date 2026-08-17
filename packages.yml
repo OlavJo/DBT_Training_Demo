@@ -1,0 +1,39 @@
+# ============================================================================
+# packages.yml — deliberately empty
+# ============================================================================
+# This training project uses NO dbt packages. Everything that would normally
+# come from dbt_utils is hand-written in macros/ instead, so you can see what
+# those packages actually do rather than treating them as magic.
+#
+# ---------------------------------------------------------------------------
+# IMPORTANT — do not take "no packages" as a limitation of Snowflake.
+# ---------------------------------------------------------------------------
+# In production you almost certainly WILL want dbt_utils. There are two
+# supported ways to get it on dbt Projects on Snowflake:
+#
+# 1. VENDOR THE PACKAGES.
+#    Run `dbt deps` on a laptop or in CI, then commit the resulting
+#    dbt_packages/ folder to the repository. The dependencies are then just
+#    files in the project, and no external network access is needed at all.
+#
+# 2. GRANT EXTERNAL ACCESS.
+#    Attach an external access integration to the dbt project object:
+#        CREATE DBT PROJECT ... EXTERNAL_ACCESS_INTEGRATIONS = (my_eai)
+#    This lets the dbt runtime reach hub.getdbt.com directly at compile time.
+#
+# Why `dbt deps` fails in this training account while git works fine:
+# they use different network paths. Git access uses an API INTEGRATION —
+# Snowflake itself fetches your repo from one allow-listed host. `dbt deps`
+# needs the dbt process to make its own outbound calls to the package hub,
+# which is genuine egress from the compute layer and requires an EXTERNAL
+# ACCESS INTEGRATION. Security teams reasonably treat those differently.
+#
+# If it were enabled, this is all it would take:
+#
+# packages:
+#  - package: dbt-labs/dbt_utils
+#    version: [">=1.3.0", "<2.0.0"]
+# ============================================================================
+
+packages: []
+
