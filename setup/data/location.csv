@@ -1,0 +1,6 @@
+LOCATION_ID,LOCATION_NAME,STREET,CITY,REGION,COUNTRY,LATITUDE,LONGITUDE,_LOADED_AT
+101,Pike Place Market,1st Ave & Pike St,Seattle,Washington,US,47.6097,-122.3422,2026-03-01 05:00:00
+102,South Lake Union,Terry Ave N & Harrison St,Seattle,Washington,US,47.6237,-122.3376,2026-03-01 05:00:00
+103,Denver Union Station,1701 Wynkoop St,Denver,Colorado,US,39.7526,-105.0004,2026-03-01 05:00:00
+104,Capitol Hill,Broadway E & E Pine St,Seattle,Washington,US,47.6151,-122.3208,2026-03-01 05:00:00
+105,RiNo Art District,2955 Larimer St,Denver,Colorado,US,39.7639,-104.9812,2026-03-01 05:00:00
