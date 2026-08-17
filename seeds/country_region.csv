@@ -1,0 +1,16 @@
+country,region,currency_code
+US,North America,USD
+CA,North America,CAD
+MX,North America,MXN
+GB,Europe,GBP
+FR,Europe,EUR
+DE,Europe,EUR
+ES,Europe,EUR
+PL,Europe,PLN
+AU,Asia Pacific,AUD
+NZ,Asia Pacific,NZD
+JP,Asia Pacific,JPY
+IN,Asia Pacific,INR
+BR,South America,BRL
+CL,South America,CLP
+ZA,Africa,ZAR
