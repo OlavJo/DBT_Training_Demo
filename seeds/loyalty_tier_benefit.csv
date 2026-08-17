@@ -1,0 +1,3 @@
+loyalty_tier,tier_rank,discount_pct,free_delivery
+BRONZE,1,0.00,false
+SILVER,2,0.05,false
