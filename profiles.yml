@@ -1,0 +1,42 @@
+# ============================================================================
+# profiles.yml — connection configuration
+# ============================================================================
+# On dbt Projects on Snowflake this file MUST live in the project folder
+# (not in ~/.dbt/) and MUST set type: snowflake.
+#
+# Note what is missing: no account, no user, no password, no private key.
+# The project runs inside Snowflake under the caller's session, so there is
+# no credential to store, rotate, or leak. For a team used to managing
+# service accounts for every ETL tool, this is worth pausing on.
+#
+# A "target" is a named set of output locations. Same code, different
+# destination — this is how one codebase serves dev and prod without a
+# single branch, copy, or find-and-replace.
+# ============================================================================
+
+tasty_bytes: 
+    target: dev
+    
+    outputs: 
+    
+        dev: 
+            type: snowflake 
+            account: ''             # ignored on DPoS — the session provides context 
+            user: ''                # ignored on DPoS 
+            role: DBT_TRAINING_TRANSFORM 
+            warehouse: DBT_TRAINING_WH 
+            database: DBT_TRAINING_DB 
+            schema: DEV 
+            threads: 4              # dbt builds independent models in parallel 
+                                    # Snowflake handles the concurrency; the DAG 
+                                    # guarantees nothing runs before its parents. 
+
+        prod: 
+            type: snowflake
+            account: '' 
+            user: '' 
+            role: DBT_TRAINING_TRANSFORM 
+            warehouse: DBT_TRAINING_WH 
+            database: DBT_TRAINING_DB 
+            schema: PROD 
+            threads: 8
