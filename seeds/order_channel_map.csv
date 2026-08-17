@@ -1,0 +1,5 @@
+channel_code,channel_name,is_digital,channel_group
+WLKUP,Walk-up,false,In Person
+KIOSK,Kiosk,true,In Person
+MOB_APP,Mobile App,true,Remote
+WEB,Website,true,Remote
