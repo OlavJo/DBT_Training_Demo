@@ -1,3 +1,5 @@
+# UNDER CONSTRUCTION - DO NOT USE YET
+
 # Tasty Bytes — dbt on Snowflake Training Project
 
 A complete, self-contained dbt project for teaching dbt to a team that already
