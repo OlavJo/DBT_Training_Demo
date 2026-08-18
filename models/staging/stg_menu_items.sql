@@ -25,7 +25,8 @@ with source as (
 renamed as ( 
 
     select 
-        -- ids menu_item_id 
+        -- ids 
+        menu_item_id 
         , menu_type_id 
         
         -- attributes 
