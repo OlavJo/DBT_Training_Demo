@@ -1,0 +1,148 @@
+version: 2
+
+# =============================================================================
+# INTERMEDIATE MODELS
+# =============================================================================
+# The layer the original Snowflake tutorial does not have, and the one whose
+# absence causes the most trouble in real projects.
+#
+# A model earns a place here when it does something staging is forbidden to
+# do (join, filter, aggregate) but is not yet something a business user would
+# query. Each of the six below exists for a different, nameable reason:
+#
+#   int_orders_cleaned                      joins seeds, owns a business rule
+#   int_order_lines_enriched                joins menu, computes line economics
+#   int_orders_with_lines                   fan-out control before the header join
+#   int_customer_scd                        presents the snapshot cleanly
+#   int_truck_scd                           presents the snapshot cleanly
+#   int_order_lines_customer_attributed     point-in-time resolution
+#
+# If you cannot say in one sentence why an intermediate model exists, it
+# probably should not.
+# =============================================================================
+
+models: 
+  - name: int_orders_cleaned 
+    description: > 
+        Orders with channel codes decoded against the order_channel_map seed, 
+        geography resolved via location and the country_region seed, and the 
+        cancellation rule made explicit as a flag. The single home of the 
+        definition "what counts as a real order". 
+    columns: 
+      - name: order_id 
+        data_tests: [unique, not_null] 
+      - name: order_channel_name 
+        description: Human-readable channel, decoded from the POS code. 
+        data_tests: [not_null] 
+      - name: is_cancelled 
+        description: > 
+            True for cancelled orders. They are FLAGGED here rather than 
+            dropped, so cancellation rates remain analysable. The fact tables 
+            filter on this. 
+        data_tests: [not_null] 
+      - name: reporting_region 
+        description: Region from the country_region seed, via the location. 
+      - name: loaded_at 
+        data_tests: [not_null] 
+        
+  - name: int_order_lines_enriched 
+    description: > 
+        Order lines joined to menu attributes with line-level revenue, cost and 
+        margin computed. 
+        
+        KNOWN LIMITATION, stated deliberately rather than discovered later: 
+        revenue uses the historical transaction price captured on the line, but 
+        cost uses the CURRENT standard cost from the menu, because the source 
+        provides no cost history. Margin for past periods will therefore restate 
+        when a supplier price changes. Fixing this properly requires the source 
+        to record cost on the transaction, or a snapshot over menu_item — it is 
+        not something the modelling layer can invent. 
+    columns: 
+      - name: order_line_id 
+        data_tests: [unique, not_null] 
+      - name: line_gross_revenue 
+        description: quantity x price at time of sale. 
+        data_tests: [not_negative] 
+      - name: line_cogs 
+        description: quantity x CURRENT standard cost. See the limitation above. 
+        data_tests: [not_negative] 
+      - name: item_name 
+        data_tests: [not_null] 
+        
+  - name: int_orders_with_lines 
+    description: > 
+        Order lines aggregated to order grain. Ephemeral — the only one in the 
+        project, kept as a worked example of the materialisation. Prevents the 
+        header-times-lines fan-out and computes lines_last_loaded_at, without 
+        which restatements to a line would never reach fct_orders. 
+        
+  - name: int_customer_scd 
+    description: >
+        snap_customer presented as a clean SCD2 history: dbt's bookkeeping 
+        columns renamed out of sight, version numbers derived, and the four 
+        flags every consumer needs computed once. 
+    columns: 
+      - name: customer_version_id 
+        description: One row per customer per version. The version key. 
+        data_tests: [unique, not_null]
+      - name: customer_id 
+        data_tests: [not_null] 
+      - name: version_number 
+        description: 1, 2, 3 ... chronological per customer. 
+        data_tests: [not_null] 
+      - name: is_current 
+        description: This version is in force right now. 
+        data_tests: [not_null] 
+      - name: is_latest_version 
+        description: > 
+            The most recent version we ever recorded. Differs from is_current 
+            only for customers erased from the source. 
+        data_tests: [not_null] 
+      - name: is_deleted_in_source 
+        description: The customer has been erased from the source system. 
+        data_tests: [not_null] 
+      - name: effective_valid_from 
+        description: > 
+            valid_from, except the first version is backdated to 1900-01-01 so 
+            that orders predating the first snapshot run still resolve. 
+        data_tests: [not_null] 
+        
+  - name: int_truck_scd 
+    description: > 
+        snap_truck presented as a clean SCD2 history. Same shape as 
+        int_customer_scd; no deletion flag, because trucks are retired by 
+        status change rather than erased. 
+    columns: 
+      - name: truck_version_id 
+        data_tests: [unique, not_null] 
+      - name: truck_id 
+        data_tests: [not_null] 
+      - name: is_current 
+        data_tests: [not_null] 
+ 
+  - name: int_order_lines_customer_attributed 
+    description: >
+        Order lines resolved to the customer version in force at the moment of 
+        sale. The model that makes historically faithful reporting possible, and 
+        the reason the snapshots exist. 
+    columns: 
+      - name: order_line_id 
+        description: >
+            Still unique. If this test ever fails, the SCD2 table has 
+            overlapping validity windows and the point-in-time join has 
+            fanned out — which would silently duplicate revenue. 
+        data_tests: [unique, not_null] 
+      - name: customer_city_at_order 
+        description: The customer's city ON THE DAY OF THE SALE. 
+      - name: customer_tier_at_order 
+        description: The customer's loyalty tier ON THE DAY OF THE SALE. 
+      - name: customer_has_changed_since 
+        description: > 
+            True where the customer record has changed since this sale. These 
+            are exactly the rows where current-state and point-in-time 
+            attribution disagree. 
+      - name: effective_loaded_at 
+        description: > 
+            The later of the line's and the header's ingestion time. The 
+            watermark for fct_order_lines. 
+        data_tests: [not_null]
