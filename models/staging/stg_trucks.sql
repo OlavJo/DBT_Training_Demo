@@ -36,8 +36,8 @@ renamed as (
         -- source change tracking. Trusted — see snap_truck. 
         , updated_at 
         
-        -- audit , 
-        _loaded_at as loaded_at 
+        -- audit
+        , _loaded_at as loaded_at 
         
     from source
 )
