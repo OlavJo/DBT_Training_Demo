@@ -1,0 +1,352 @@
+version: 2
+
+# =============================================================================
+# MARTS — the published star schema
+# =============================================================================
+# Everything here is what a business user, a BI tool or Cortex Analyst sees.
+# The DBT_TRAINING_ANALYST role has SELECT on this schema and no access at
+# all to staging or intermediate: the mart is the contract, the working
+# layers are private.
+#
+# Tests below are not decoration. The SCD2 tests in particular are the ones
+# that would genuinely save you in production — a Type 2 dimension with
+# overlapping validity windows silently DUPLICATES revenue on every
+# point-in-time join, and nothing else will tell you.
+# =============================================================================
+
+models:
+
+# -----------------------------------------------------------------------------
+# DIMENSIONS
+# ----------------------------------------------------------------------------- 
+
+  - name: dim_customer 
+    description: > 
+        One row per customer, latest known state. Type 1. 
+        
+        Filtered on is_latest_version rather than is_current so that customers 
+        erased from the source keep their key and their historical orders remain 
+        joinable. Use is_deleted_in_source to exclude them from current 
+        reporting. 
+    columns: 
+      - name: customer_key 
+        description: Surrogate key. md5 of customer_id. 
+        data_tests: [unique, not_null] 
+      - name: customer_id 
+        description: Natural key, retained for reconciliation to source. 
+        data_tests: [unique, not_null] 
+      - name: city 
+        description: Current city. Denver for customer 3 from Day 2 onward. 
+      - name: loyalty_tier 
+        data_tests: 
+          - accepted_values: 
+              values: ['BRONZE', 'SILVER', 'GOLD', 'PLATINUM'] 
+      - name: is_deleted_in_source 
+        description: > 
+            True where the customer has been erased from the source system. 
+            Customer 5 from Day 3. The row is kept so the facts still balance.
+        data_tests: [not_null] 
+      - name: loyalty_discount_pct
+        data_tests: [not_negative] 
+        
+  - name: dim_customer_history 
+    description: > 
+        Full SCD Type 2 customer dimension. One row per customer per version, 
+        with contiguous validity windows. Join on 
+            `order_ts >= valid_from and order_ts < valid_to`. 
+    data_tests: 
+      # ------------------------------------------------------------------- 
+      # THE TWO TESTS THAT MATTER MOST IN THIS PROJECT. 
+      # Both are custom generic tests written by hand in tests/generic/ — 
+      # no package required. See those files for what they actually do. 
+      # ------------------------------------------------------------------- 
+      - scd2_no_overlapping_versions: 
+          entity_column: customer_id 
+          valid_from_column: valid_from 
+          valid_to_column: valid_to 
+      - scd2_exactly_one_current: 
+          entity_column: customer_id 
+          is_current_column: is_current 
+          # Customer 5 is erased on Day 3 and correctly has NO current 
+          # version afterwards. That is the intended behaviour of 
+          # hard_deletes: invalidate, so deleted entities are excluded from 
+          # this test rather than the test being weakened for everyone. 
+          where: "not is_deleted_in_source" 
+    columns: 
+      - name: customer_history_key 
+        description: > 
+            Version-grain surrogate key: md5 of (customer_id, valid_from). 
+            If this test fails, two versions share a validity start and the 
+            point-in-time join will fan out and duplicate revenue. 
+        data_tests: [unique, not_null] 
+      - name: customer_key
+        description: Type 1 key, for joining back to dim_customer. 
+        data_tests: [not_null] 
+      - name: version_number 
+        data_tests: [not_null] 
+      - name: valid_from 
+        description: > 
+            Start of this version's validity window. Backdated to 1900-01-01 
+            for version 1 — see int_customer_scd.
+        data_tests: [not_null] 
+      - name: valid_to 
+        description: End of the window. 9999-12-31 for the current version. 
+        data_tests: [not_null] 
+      - name: is_current 
+        data_tests: [not_null]
+        
+  - name: dim_truck 
+    description: One row per truck, current state. Type 1. 
+    columns: 
+      - name: truck_key 
+        data_tests: [unique, not_null] 
+      - name: truck_id 
+        data_tests: [unique, not_null] 
+      - name: truck_status 
+        data_tests: 
+          - accepted_values: 
+              values: ['ACTIVE', 'MAINTENANCE', 'RETIRED'] 
+              
+  - name: dim_truck_history 
+    description: Full SCD Type 2 truck dimension. One row per truck per version. 
+    data_tests: 
+      - scd2_no_overlapping_versions: 
+        entity_column: truck_id 
+        valid_from_column: valid_from 
+        valid_to_column: valid_to 
+      - scd2_exactly_one_current: 
+        entity_column: truck_id 
+        is_current_column: is_current 
+    columns:
+      - name: truck_history_key 
+        data_tests: [unique, not_null] 
+      - name: truck_key 
+        data_tests: [not_null] 
+      - name: valid_from 
+        data_tests: [not_null] 
+      - name: valid_to 
+        data_tests: [not_null] 
+        
+  - name: dim_location 
+    description: > 
+        Trading locations. Type 1 — location 103's previous name is not 
+        retained anywhere after Day 2, deliberately. 
+    columns: 
+      - name: location_key 
+        data_tests: [unique, not_null] 
+      - name: location_id 
+        data_tests: [unique, not_null] 
+      - name: location_name 
+        data_tests: [not_null] 
+        
+  - name: dim_menu_item 
+    description: > 
+        Menu items at CURRENT prices. Safe to be Type 1 only because the facts 
+        carry their own transaction price. 
+    columns: 
+      - name: menu_item_key 
+        data_tests: [unique, not_null] 
+      - name: menu_item_id 
+        data_tests: [unique, not_null] 
+      - name: current_sale_price_usd 
+        data_tests: [not_negative] 
+      - name: current_margin_pct 
+        description: > 
+            Warning rather than error. A promotional item sold below cost is 
+            unusual and worth flagging, but it is a legitimate business 
+            decision, not a data defect. Severity encodes the difference 
+            between "this must never happen" and "someone should look at this". 
+        data_tests: 
+          - not_negative: 
+            config: 
+                severity: warn 
+                
+  - name: dim_date 
+    description: Calendar dimension, 2026-2028, generated without a package. 
+    columns: 
+      - name: date_key 
+        description: Integer key in YYYYMMDD form. 
+        data_tests: [unique, not_null] 
+      - name: date_day
+        data_tests: [unique, not_null]
+        
+
+# -----------------------------------------------------------------------------
+# FACTS
+# ----------------------------------------------------------------------------- 
+
+  - name: fct_orders 
+    description: > 
+        One row per completed order. Incremental, merged on order_key, 
+        watermarked on effective_loaded_at with a lookback window. 
+    columns: 
+      - name: order_key 
+        data_tests: [unique, not_null] 
+      - name: order_id 
+        description: > 
+            Natural key. Still unique after the Day 3 restatement — proof that 
+            merge updated in place rather than appending a duplicate. 
+        data_tests: [unique, not_null] 
+      - name: customer_key 
+        data_tests: 
+          - not_null 
+          - relationships: 
+              to: ref('dim_customer') 
+              field: customer_key 
+      - name: truck_key 
+        data_tests: 
+          - relationships: 
+              to: ref('dim_truck') 
+              field: truck_key 
+      - name: date_key 
+        data_tests: 
+          - relationships: 
+              to: ref('dim_date') 
+              field: date_key 
+      - name: gross_revenue 
+        data_tests: [not_negative] 
+      - name: net_revenue 
+        data_tests: [not_negative] 
+      - name: ingestion_lag_days 
+        description: > 
+            Days between the sale and its arrival in the warehouse. Zero or one 
+            for everything except order 1099, which shows 2 — the late arrival. 
+        data_tests: 
+          - not_negative 
+      - name: effective_loaded_at 
+        description: > 
+            The later of the header's and its lines' ingestion time. The 
+            incremental watermark. Without the lines component, a restated 
+            line would never trigger a rebuild of its order. 
+        data_tests: [not_null] 
+ 
+  - name: fct_order_lines 
+    description: > 
+        One row per item sold. The finest grain, and the base of the semantic 
+        view. Carries BOTH a current-state and a point-in-time customer key. 
+    columns: 
+      - name: order_line_key 
+        data_tests: [unique, not_null] 
+      - name: order_line_id 
+        description: > 
+            Natural key. Row count stays flat across the Day 3 restatement 
+            while revenue rises — the proof that merge worked. 
+        data_tests: [unique, not_null] 
+      - name: order_key 
+        data_tests: 
+          - not_null 
+          - relationships: 
+              to: ref('fct_orders') 
+              field: order_key 
+      - name: customer_key 
+        description: Points at dim_customer — the customer as they are TODAY. 
+        data_tests: 
+          - not_null 
+          - relationships: 
+              to: ref('dim_customer') 
+              field: customer_key 
+      - name: customer_history_key 
+        description: > 
+            Points at dim_customer_history — the customer as they were ON THE 
+            DAY OF THE SALE. If this relationship ever fails, the point-in-time
+            join has a gap and some sales cannot be attributed to any version. 
+        data_tests: 
+          - not_null 
+          - relationships: 
+              to: ref('dim_customer_history') 
+              field: customer_history_key 
+      - name: menu_item_key 
+        data_tests: 
+          - relationships: 
+              to: ref('dim_menu_item') 
+              field: menu_item_key 
+      - name: quantity 
+        data_tests: [not_negative] 
+      - name: line_gross_revenue 
+        data_tests: [not_negative] 
+      - name: line_gross_margin 
+        description: >
+            Warning only — a line sold below cost is possible and legitimate. 
+        data_tests: 
+          - not_negative: 
+              config: 
+                  severity: warn 
+      - name: customer_city_at_order 
+        description: > 
+            The customer's city on the day of the sale. Compare with 
+            dim_customer.city to see the two attribution methods disagree. 
+        data_tests: [not_null] 
+        
+  - name: agg_daily_truck_performance 
+    description: > 
+        Revenue, margin and volume per truck per day. Rebuilt in full on every 
+        run, deliberately — see the model for why an incremental build here 
+        would go stale and disagree with the facts. 
+    data_tests: 
+      # The grain test. "One row per truck per day" is only a comment until 
+      # something enforces it. 
+      - unique_combination_of_columns: 
+          combination_of_columns: 
+            - date_key 
+            - truck_key 
+    columns: 
+      - name: gross_revenue 
+        data_tests: [not_negative] 
+      - name: order_count 
+        data_tests: [not_null, not_negative] 
+      - name: business_date 
+        data_tests: [not_null]
+        
+# =============================================================================
+# EXPOSURES
+# =============================================================================
+
+# An exposure declares a downstream CONSUMER of the mart. dbt cannot see past
+# its own DAG — it has no idea which dashboards read these tables — so this
+# is how you tell it.
+#
+# The payoff is impact analysis. `dbt ls --select +exposure:tasty_bytes_sales_review`
+# lists everything that dashboard depends on, all the way back to source.
+# Before this existed, the honest answer to "what breaks if I change this
+# column?" was usually "we'll find out on Monday".
+# =============================================================================
+
+exposures: 
+
+  - name: tasty_bytes_sales_review 
+    label: Weekly Sales Review 
+    type: dashboard 
+    maturity: high 
+    url: https://app.snowflake.com/ 
+    description: > 
+        The weekly trading review. Reads the daily truck aggregate and the line 
+        fact directly. Uses point-in-time customer attribution, so restating 
+        history here would change numbers that have already been circulated. 
+    depends_on: 
+      - ref('agg_daily_truck_performance') 
+      - ref('fct_order_lines') 
+      - ref('dim_customer_history') 
+    owner: 
+        name: Analytics Team 
+        email: analytics@example.com
+        
+  - name: tasty_bytes_cortex_analyst 
+    label: Cortex Analyst — Sales 
+    type: application 
+    maturity: medium 
+    description: > 
+        Natural-language querying over the TASTY_BYTES_SALES semantic view, 
+        created by `dbt run-operation create_semantic_view`. Depends on the 
+        star schema being correct — every relationship in the semantic view 
+        maps to a foreign key defined here. 
+    depends_on: 
+      - ref('fct_order_lines') 
+      - ref('dim_customer') 
+      - ref('dim_truck') 
+      - ref('dim_menu_item') 
+      - ref('dim_location') 
+      - ref('dim_date') 
+    owner: 
+        name: Analytics Team 
+        email: analytics@example.com
+ 
