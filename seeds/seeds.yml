@@ -71,7 +71,8 @@ seeds:
         never provide this, and hard-coding a CASE statement in a model would 
         bury a business definition inside SQL where nobody can find it. 
     columns: 
-      - name: channel_code description: Raw code as it arrives from the POS (WLKUP, MOB_APP, ...). 
+      - name: channel_code 
+        description: Raw code as it arrives from the POS (WLKUP, MOB_APP, ...). 
         data_tests: 
           - unique 
           - not_null 
