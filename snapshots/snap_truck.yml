@@ -1,0 +1,64 @@
+version: 2
+
+# =============================================================================
+# snap_truck — SCD Type 2 history for food trucks
+# =============================================================================
+# The counterpart to snap_customer. Same job, different strategy, and the
+# difference is driven entirely by what the source system provides.
+#
+# Put the two files side by side during the session. The only meaningful
+# difference is three lines, and those three lines encode a judgement about
+# whether the source can be trusted to tell you when it changed.
+# =============================================================================
+
+snapshots: 
+
+  - name: snap_truck 
+    relation: ref('stg_trucks') 
+    description: > 
+        Full history of every truck record. Captures relocations, status 
+        changes and changes of franchisee. 
+    config: 
+        schema: snapshots 
+        unique_key: truck_id 
+        # ----------------------------------------------------------------- 
+        # STRATEGY: timestamp 
+        # ----------------------------------------------------------------- 
+        # The truck source maintains updated_at, and maintains it honestly. 
+        # dbt therefore only needs to compare one column against the stored 
+        # version: if updated_at has moved, the row changed. 
+        # 
+        # Prefer this whenever the source supports it. It is cheaper than 
+        # `check`, it is unambiguous, and it captures changes to columns you 
+        # did not think to list. 
+        # 
+        # The catch, and it is a serious one: this is only as good as the 
+        # source's discipline. If some code path updates a row without 
+        # touching updated_at, dbt will never see the change and nothing will 
+        # warn you. Before choosing `timestamp`, be sure the column is 
+        # maintained by the database or by every write path — not by "most of 
+        # the application, usually". 
+        # 
+        # When in doubt, `check` is the conservative choice. 
+        # ----------------------------------------------------------------- 
+        strategy: timestamp 
+        updated_at: updated_at 
+        
+        # ----------------------------------------------------------------- 
+        # Note there is no check_cols here — with `timestamp`, ALL columns are 
+        # effectively tracked, because the timestamp says "something changed" 
+        # without saying what. On Day 2 truck 2 relocates; on Day 3 truck 4 
+        # goes into maintenance and truck 1 changes hands. All three are 
+        # caught without listing a single column name. 
+        # ----------------------------------------------------------------- 
+        # Trucks are not erased from the source — retirement is a status change, 
+        # which is the better modelling choice anyway. `ignore` is the default 
+        # and is stated explicitly here so the contrast with snap_customer is 
+        # visible rather than implied. 
+        hard_deletes: ignore 
+        dbt_valid_to_current: "to_timestamp_ntz('9999-12-31 00:00:00')"
+        
+# =============================================================================
+# The same warning as snap_customer applies: this table cannot be rebuilt
+# from source. It is the only place that records where truck 2 used to park.
+# =============================================================================
