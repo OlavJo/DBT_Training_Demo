@@ -1,0 +1,147 @@
+version: 2
+
+models: 
+
+  - name: stg_customers 
+    description: > 
+        One row per customer, as the source currently holds them. Overwritten in 
+        place by the operational system, so this model shows CURRENT state only. 
+        History is captured by snap_customer. 
+    columns: 
+      - name: customer_id 
+        description: Business key from the operational system. 
+        data_tests: [unique, not_null] 
+      - name: full_name 
+        description: First and last name concatenated, for display. 
+      - name: email 
+        description: Lower-cased email address. 
+      - name: city 
+        description: Current city. Customer 3 moves Seattle -> Denver on Day 2. 
+      - name: loyalty_tier 
+        description: Current tier. Customer 1 moves BRONZE -> GOLD on Day 3. 
+        data_tests: 
+          - accepted_values: 
+              values: ['BRONZE', 'SILVER', 'GOLD', 'PLATINUM'] 
+      - name: loaded_at 
+        description: When this version of the row arrived in the warehouse. 
+        data_tests: [not_null] 
+        
+  - name: stg_trucks 
+    description: > 
+        One row per food truck, current state. Unlike customers, this source 
+        maintains a trustworthy updated_at, which snap_truck relies on. 
+    columns: 
+      - name: truck_id 
+        data_tests: [unique, not_null] 
+      - name: truck_status 
+        description: ACTIVE, MAINTENANCE or RETIRED. Truck 4 changes on Day 3. 
+        data_tests: 
+          - accepted_values: 
+              values: ['ACTIVE', 'MAINTENANCE', 'RETIRED'] 
+      - name: primary_location_id 
+        description: Home pitch. Truck 2 moves 101 -> 104 on Day 2. 
+        data_tests: 
+          - relationships: 
+              to: ref('stg_locations') 
+              field: location_id 
+      - name: updated_at
+        description: Source modification time. Watched by snap_truck. 
+        data_tests: [not_null]
+        
+  - name: stg_locations 
+    description: > 
+        Trading locations. Deliberately Type 1 — location 103 is renamed on 
+        Day 2 and the previous name is not retained anywhere. 
+    columns: 
+      - name: location_id 
+        data_tests: [unique, not_null] 
+      - name: location_name 
+        data_tests: [not_null] 
+      - name: country 
+        data_tests: 
+          - relationships: 
+              to: ref('country_region') 
+              field: country 
+              
+  - name: stg_menu_items 
+    description: > 
+        Menu items at their CURRENT price. Do not join this to facts to compute 
+        historical revenue — order lines carry the transaction price. 
+    columns: 
+      - name: menu_item_id 
+        data_tests: [unique, not_null] 
+      - name: current_sale_price_usd 
+        description: Today's price. Item 7 rises 9.00 -> 10.50 on Day 2. 
+        data_tests: 
+          - not_negative 
+      - name: current_cost_of_goods_usd 
+        data_tests: 
+          - not_negative
+          
+  - name: stg_order_headers 
+    description: > 
+        One row per order. Carries both business time (order_ts) and ingestion 
+        time (loaded_at); the distinction drives every incremental model here. 
+    columns: 
+      - name: order_id 
+        data_tests: [unique, not_null] 
+      - name: order_date 
+        description: Business date of the sale, derived from order_ts. 
+        data_tests: [not_null] 
+      - name: order_status 
+        data_tests: 
+          - accepted_values: 
+              values: ['COMPLETED', 'CANCELLED'] 
+      - name: order_channel_code 
+        description: Raw POS code. Decoded in int_orders_cleaned. 
+        data_tests: 
+          - relationships: 
+              to: ref('order_channel_map') 
+              field: channel_code 
+      - name: truck_id 
+        data_tests: 
+          - relationships: 
+              to: ref('stg_trucks') 
+              field: truck_id 
+      - name: discount_amount 
+        data_tests: 
+          - not_negative 
+      - name: loaded_at 
+        description: > 
+            Ingestion time. The incremental watermark. Differs from order_date
+            by two days for the late-arriving order 1099. 
+        data_tests: [not_null] 
+        
+  - name: stg_order_lines 
+    description: > 
+        One row per item sold — the finest grain in the warehouse. Rows may be 
+        restated in place, which is why downstream facts merge on the key. 
+    columns: 
+      - name: order_line_id 
+        description: > 
+            Business key. Remains unique across restatements, because a 
+            correction updates the row rather than adding one. 
+        data_tests: [unique, not_null] 
+      - name: order_id 
+        data_tests: 
+          - not_null
+          - relationships: 
+              to: ref('stg_order_headers') 
+              field: order_id 
+      - name: menu_item_id 
+        data_tests: 
+          - relationships: 
+              to: ref('stg_menu_items') 
+              field: menu_item_id 
+      - name: quantity 
+        description: Units sold. Line 10281 is corrected 2 -> 5 on Day 3. 
+        data_tests: 
+          - not_negative 
+      - name: unit_price_usd 
+        description: Price at time of sale. NOT the current menu price. 
+        data_tests: 
+          - not_negative 
+      - name: line_gross_revenue 
+        description: quantity * unit_price_usd. 
+        data_tests: 
+          - not_negative
