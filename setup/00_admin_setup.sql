@@ -224,7 +224,7 @@ USE SCHEMA DBT_TRAINING_DB.INTEGRATIONS;
 
 /*  ---- Option (b): personal access token ------------------------------------ 
     Comment this block out entirely if you are using a public repo or OAuth2. */
-CREATE OR REPLACE SECRET DBT_TRAINING_GIT_SECRET 
+CREATE SECRET IF NOT EXISTS DBT_TRAINING_GIT_SECRET 
     TYPE = password 
     USERNAME = '<YOUR_GITHUB_USERNAME>' 
     PASSWORD = '<YOUR_GITHUB_PERSONAL_ACCESS_TOKEN>' 
@@ -245,7 +245,10 @@ CREATE OR REPLACE GIT REPOSITORY DBT_TRAINING_REPO
     GIT_CREDENTIALS = DBT_TRAINING_GIT_SECRET 
     ORIGIN = 'https://github.com/<YOUR_GITHUB_ORG_OR_USER>/<YOUR_REPO_NAME>.git' 
     COMMENT = 'Source of truth for the Tasty Bytes dbt training project.';
-	
+
+GRANT OWNERSHIP ON SECRET DBT_TRAINING_DB.INTEGRATIONS.DBT_TRAINING_GIT_SECRET 
+    TO ROLE ACCOUNTADMIN REVOKE CURRENT GRANTS;
+
 /*  Pull the current contents of the repository into Snowflake. */
 ALTER GIT REPOSITORY DBT_TRAINING_REPO FETCH;
 
