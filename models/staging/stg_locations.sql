@@ -34,8 +34,8 @@ renamed as (
         , latitude 
         , longitude 
         
-        -- audit , 
-        _loaded_at as loaded_at 
+        -- audit
+        , _loaded_at as loaded_at 
         
     from source
     
