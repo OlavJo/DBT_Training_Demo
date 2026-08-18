@@ -1,0 +1,157 @@
+version: 2
+
+# =============================================================================
+# snap_customer — SCD Type 2 history for customers
+# =============================================================================
+# This file is the answer to "why do I need dbt when I already know how to
+# write a merge statement?"
+#
+# Below is the entire definition. It produces a Type 2 dimension: new
+# versions on change, correct validity windows, exactly one current row per
+# customer, and closed-off records when a customer is erased from source.
+#
+# Write the equivalent MERGE by hand and it runs to roughly eighty lines,
+# every one of which has to be re-tested each time you add a tracked column.
+# Here, adding a tracked column means adding a string to a list.
+#
+# Run `dbt snapshot`, then look at the generated SQL in Snowsight's query
+# history. It is a merge statement, and it is recognisably the merge
+# statement you would have written. That is the point — dbt is not doing
+# anything you could not do, it is doing what you already do, consistently,
+# and without you maintaining it.
+# =============================================================================
+
+snapshots: 
+
+  - name: snap_customer 
+    relation: ref('stg_customers') 
+    description: > 
+        Full history of every customer record. One row per customer per version. 
+        Never dropped, never rebuilt — see the warning below. 
+        
+    config: 
+        schema: snapshots 
+        unique_key: customer_id 
+        
+        # ----------------------------------------------------------------- 
+        # STRATEGY: check 
+        # ----------------------------------------------------------------- 
+        # The customer source has NO reliable update timestamp, so there is 
+        # nothing to compare against to decide whether a row changed. The 
+        # `check` strategy handles that by comparing the column VALUES 
+        # themselves against the latest stored version. 
+        # 
+        # It costs more than `timestamp` — every listed column is compared on 
+        # every run — but it is the only honest option against a source that 
+        # cannot tell you when it changed. Compare with snap_truck, which uses 
+        # `timestamp` because that source does maintain one. 
+        # 
+        # Choosing wrongly is quiet and expensive: point `timestamp` at a 
+        # column the source does not truly maintain and you will silently miss 
+        # changes, with no error to tell you. 
+        # ----------------------------------------------------------------- 
+        strategy: check 
+        
+        # ----------------------------------------------------------------- 
+        # updated_at WITH the check strategy — read this one carefully 
+        # ----------------------------------------------------------------- 
+        # By default, the `check` strategy stamps dbt_valid_from and 
+        # dbt_valid_to with the SNAPSHOT RUN TIME — the wall clock at the 
+        # moment dbt executed. (The `timestamp` strategy behaves differently: 
+        # it takes its values from the updated_at column, which is why 
+        # snap_truck needs nothing extra.) 
+        # 
+        # Supplying updated_at here tells the check strategy to borrow that 
+        # column for its timestamps instead of reading the clock. Change 
+        # DETECTION still comes from check_cols; this only controls the 
+        # timestamps written when a change is found. 
+        # 
+        # WHY IT MATTERS HERE. This project simulates three days of ingestion 
+        # dated February and March 2026, but you are running it today. Left on 
+        # the default, every version window would start at today's date, and 
+        # since every order predates today, ALL of them would fall inside 
+        # version 1. Customer 3's Denver orders would be attributed to 
+        # Seattle, and the point-in-time comparison would be silently wrong. 
+        # 
+        # WHY IT MATTERS IN PRODUCTION. The same issue appears whenever 
+        # history is backfilled, whenever a batch runs late, and whenever a 
+        # snapshot is re-pointed at a rebuilt staging model. Snapshot validity 
+        # windows record WHEN DBT OBSERVED A CHANGE. If that is not the same 
+        # as when the change happened, and the difference matters to your 
+        # reporting, borrow a column from the source that does know. 
+        # ----------------------------------------------------------------- 
+        updated_at: loaded_at 
+        
+        # ----------------------------------------------------------------- 
+        # check_cols — the attributes whose history actually matters. 
+        # ----------------------------------------------------------------- 
+        # Listed explicitly rather than using `all`. Two reasons: 
+        # 
+        #   * `all` would include loaded_at, which changes on every source 
+        #     update. Every run would produce a new version even when nothing 
+        #     of substance changed, and the history would fill with noise.
+        # 
+        #   * Listing them is a statement of intent. This line records a 
+        #     business decision about which attributes are worth remembering, 
+        #     in a place a reviewer can see it. 
+        # 
+        # Note phone and full_name are absent. A corrected typo in a phone 
+        # number is not an event anyone needs to analyse. 
+        # ----------------------------------------------------------------- 
+        check_cols: 
+          - city 
+          - postal_code 
+          - loyalty_tier 
+          - email 
+          - marketing_opt_in 
+          
+        # ----------------------------------------------------------------- 
+        # hard_deletes: invalidate 
+        # ----------------------------------------------------------------- 
+        # On Day 3, customer 5 is erased from the source under right-to-erasure. 
+        # The row does not change — it disappears. 
+        # 
+        # Default behaviour (`ignore`) would leave her last version open 
+        # forever, so she would look like a current customer indefinitely. 
+        # 
+        # `invalidate` closes the record: dbt_valid_to is set to the run 
+        # timestamp, the version stops being current, and the history is 
+        # preserved so her past orders still reconcile. 
+        # 
+        # (dbt 1.9 replaced the older `invalidate_hard_deletes: true` with this 
+        # config. The third option, `new_record`, writes an explicit tombstone 
+        # row instead — useful when downstream consumers need to see the 
+        # deletion as an event rather than infer it from a closed window.) 
+        # ----------------------------------------------------------------- 
+        hard_deletes: invalidate 
+        
+        # ----------------------------------------------------------------- 
+        # dbt_valid_to_current 
+        # ----------------------------------------------------------------- 
+        # By default the current version has dbt_valid_to = NULL, which makes 
+        # every point-in-time join carry `or dbt_valid_to is null`. Setting an 
+        # explicit far-future value lets the join be a plain BETWEEN, which is 
+        # easier to read and harder to get wrong. 
+        # ----------------------------------------------------------------- 
+        dbt_valid_to_current: "to_timestamp_ntz('9999-12-31 00:00:00')"
+        
+# =============================================================================
+# ⚠ READ THIS BEFORE YOU DROP ANYTHING
+# =============================================================================
+# A snapshot table is the only object in this project that CANNOT BE REBUILT.
+#
+# Every model can be reconstructed from source at any time with
+# `dbt build --full-refresh`. A snapshot cannot: it is the only record that
+# customer 3 ever lived in Seattle. The source overwrote that fact the
+# moment she moved. Drop this table and the history is gone permanently —
+# no rerun, no backfill, no recovery beyond Snowflake Time Travel and only
+# within its retention window.
+#
+# Which is why snapshots live in their own schema, why that schema is never
+# in clean-targets, and why "just drop and rebuild it" is the one instinct
+# to unlearn here.
+#
+# (In a training account that gets torn down at the end of the session, this
+# warning is admittedly somewhat ironic. The irony is worth pointing out —
+# it makes the lesson stick.)
+# =============================================================================
