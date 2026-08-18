@@ -111,12 +111,12 @@ models:
     description: Full SCD Type 2 truck dimension. One row per truck per version. 
     data_tests: 
       - scd2_no_overlapping_versions: 
-        entity_column: truck_id 
-        valid_from_column: valid_from 
-        valid_to_column: valid_to 
+            entity_column: truck_id 
+            valid_from_column: valid_from 
+            valid_to_column: valid_to 
       - scd2_exactly_one_current: 
-        entity_column: truck_id 
-        is_current_column: is_current 
+            entity_column: truck_id 
+            is_current_column: is_current 
     columns:
       - name: truck_history_key 
         data_tests: [unique, not_null] 
