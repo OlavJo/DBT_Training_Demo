@@ -52,9 +52,11 @@ final as (
         , locations.location_name as primary_location_name 
         , locations.city as primary_location_city 
         
-        -- SCD2 mechanics , truck_scd.version_number 
+        -- SCD2 mechanics 
+        , truck_scd.version_number 
         , truck_scd.effective_valid_from as valid_from 
-        , truck_scd.valid_to , truck_scd.is_current 
+        , truck_scd.valid_to 
+        , truck_scd.is_current 
         , truck_scd.source_updated_at 
         , datediff( 
             'day', 
