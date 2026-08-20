@@ -143,7 +143,7 @@
             menu_items.item_category AS ITEM_CATEGORY 
                 WITH SYNONYMS ('category', 'food type'), 
                 
-            menu_items.is_healthy AS IS_HEALTHY_FLAG, 
+            menu_items.is_healthy AS IS_HEALTHY, 
             
             locations.location_name AS LOCATION_NAME 
                 WITH SYNONYMS ('pitch', 'site'), 
