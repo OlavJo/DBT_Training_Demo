@@ -121,7 +121,7 @@
             customers.customer_name AS FULL_NAME 
                 WITH SYNONYMS ('customer'), 
             
-            customers.city AS CITY 
+            customers.customer_city AS CITY 
                 WITH SYNONYMS ('customer city', 'where the customer lives'), 
                 
             customers.loyalty_tier AS LOYALTY_TIER 
@@ -148,8 +148,8 @@
             locations.location_name AS LOCATION_NAME 
                 WITH SYNONYMS ('pitch', 'site'), 
                 
-            locations.location_city AS CITY 
-                WITH SYNONYMS ('trading city'), 
+            locations.trading_city AS CITY 
+                WITH SYNONYMS ('trading city', 'location city'), 
                 
             dates.order_date AS DATE_DAY 
                 WITH SYNONYMS ('date', 'day'), 

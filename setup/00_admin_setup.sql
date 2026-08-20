@@ -176,9 +176,10 @@ GRANT ALL PRIVILEGES ON SCHEMA DBT_TRAINING_DB.PROD TO ROLE DBT_TRAINING_TRANSFO
 /*  The dbt project object itself lives in a schema and must be creatable. */
 GRANT CREATE DBT PROJECT ON SCHEMA DBT_TRAINING_DB.DEV TO ROLE DBT_TRAINING_TRANSFORM;
 
-/*  Semantic view creation (section 9 of the design / step 8 of the runbook). */
-GRANT CREATE SEMANTIC VIEW ON SCHEMA DBT_TRAINING_DB.DEV TO ROLE DBT_TRAINING_TRANSFORM;
-GRANT CREATE SEMANTIC VIEW ON SCHEMA DBT_TRAINING_DB.PROD TO ROLE DBT_TRAINING_TRANSFORM;
+/*  Semantic view creation (section 9 of the design / step 8 of the runbook).
+    The semantic view lands in <target>_MARTS (e.g. DEV_MARTS), which is created
+    and owned by DBT_TRAINING_TRANSFORM during `dbt build`. Ownership implies all
+    privileges, so no explicit CREATE SEMANTIC VIEW grant is needed. */
 
 /*  ---- ANALYST: marts and the semantic view, nothing else ----------------- 
     Future grants at DATABASE level, then narrowed by the fact that ANALYST is

@@ -101,10 +101,10 @@ select *
 from semantic_view( 
         DBT_TRAINING_DB.DEV_MARTS.TASTY_BYTES_SALES 
         metrics (total_revenue, order_count) 
-        dimensions (city, loyalty_tier)
+        dimensions (customer_city, loyalty_tier)
     )
 order by 
-    city, 
+    customer_city, 
     loyalty_tier
 ;
 
