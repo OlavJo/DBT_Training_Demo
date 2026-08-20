@@ -50,13 +50,13 @@ versioned as (
         -- attributes as they were during this version's validity window 
         , first_name 
         , last_name 
-        , full_name 
-        , email 
+        , trim(first_name) || ' ' || trim(last_name) as full_name 
+        , lower(trim(email)) as email 
         , phone 
-        , city 
-        , country 
+        , trim(city) as city 
+        , upper(trim(country)) as country 
         , postal_code 
-        , loyalty_tier 
+        , upper(trim(loyalty_tier)) as loyalty_tier 
         , sign_up_date 
         , marketing_opt_in 
         

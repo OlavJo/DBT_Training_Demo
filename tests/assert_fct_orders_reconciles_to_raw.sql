@@ -5,7 +5,7 @@
     not equal the number of completed orders in the source. 
     
     A singular test is simply a .sql file in tests/ that returns failing rows. 
-    No {% test %} block, no arguments, no reusability — it tests one specific 
+    No test macro block, no arguments, no reusability — it tests one specific 
     thing about this specific project. Use them when the assertion is not 
     general enough to be worth parameterising. 
     

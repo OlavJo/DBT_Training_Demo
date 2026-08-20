@@ -21,7 +21,8 @@ models:
         description: Current tier. Customer 1 moves BRONZE -> GOLD on Day 3. 
         data_tests: 
           - accepted_values: 
-              values: ['BRONZE', 'SILVER', 'GOLD', 'PLATINUM'] 
+              arguments: 
+                values: ['BRONZE', 'SILVER', 'GOLD', 'PLATINUM'] 
       - name: loaded_at 
         description: When this version of the row arrived in the warehouse. 
         data_tests: [not_null] 
@@ -37,13 +38,15 @@ models:
         description: ACTIVE, MAINTENANCE or RETIRED. Truck 4 changes on Day 3. 
         data_tests: 
           - accepted_values: 
-              values: ['ACTIVE', 'MAINTENANCE', 'RETIRED'] 
+              arguments: 
+                values: ['ACTIVE', 'MAINTENANCE', 'RETIRED'] 
       - name: primary_location_id 
         description: Home pitch. Truck 2 moves 101 -> 104 on Day 2. 
         data_tests: 
           - relationships: 
-              to: ref('stg_locations') 
-              field: location_id 
+              arguments: 
+                to: ref('stg_locations') 
+                field: location_id 
       - name: updated_at
         description: Source modification time. Watched by snap_truck. 
         data_tests: [not_null]
@@ -60,8 +63,9 @@ models:
       - name: country 
         data_tests: 
           - relationships: 
-              to: ref('country_region') 
-              field: country 
+              arguments: 
+                to: ref('country_region') 
+                field: country 
               
   - name: stg_menu_items 
     description: > 
@@ -91,18 +95,21 @@ models:
       - name: order_status 
         data_tests: 
           - accepted_values: 
-              values: ['COMPLETED', 'CANCELLED'] 
+              arguments: 
+                values: ['COMPLETED', 'CANCELLED'] 
       - name: order_channel_code 
         description: Raw POS code. Decoded in int_orders_cleaned. 
         data_tests: 
           - relationships: 
-              to: ref('order_channel_map') 
-              field: channel_code 
+              arguments: 
+                to: ref('order_channel_map') 
+                field: channel_code 
       - name: truck_id 
         data_tests: 
           - relationships: 
-              to: ref('stg_trucks') 
-              field: truck_id 
+              arguments: 
+                to: ref('stg_trucks') 
+                field: truck_id 
       - name: discount_amount 
         data_tests: 
           - not_negative 
@@ -126,13 +133,15 @@ models:
         data_tests: 
           - not_null
           - relationships: 
-              to: ref('stg_order_headers') 
-              field: order_id 
+              arguments: 
+                to: ref('stg_order_headers') 
+                field: order_id 
       - name: menu_item_id 
         data_tests: 
           - relationships: 
-              to: ref('stg_menu_items') 
-              field: menu_item_id 
+              arguments: 
+                to: ref('stg_menu_items') 
+                field: menu_item_id 
       - name: quantity 
         description: Units sold. Line 10281 is corrected 2 -> 5 on Day 3. 
         data_tests: 

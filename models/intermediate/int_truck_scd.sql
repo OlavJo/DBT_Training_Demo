@@ -26,14 +26,14 @@ versioned as (
         truck_id 
         
         -- attributes as they were during this version's validity window 
-        , truck_name 
-        , make 
-        , model
-        , model_year 
+        , trim(truck_name) as truck_name 
+        , trim(make) as make 
+        , trim(model) as model
+        , year as model_year 
         , primary_location_id 
-        , franchisee_name 
+        , trim(franchisee_name) as franchisee_name 
         , menu_type_id 
-        , truck_status 
+        , upper(trim(truck_status)) as truck_status 
         
         -- the source's own change marker, carried through for reference 
         , updated_at as source_updated_at 

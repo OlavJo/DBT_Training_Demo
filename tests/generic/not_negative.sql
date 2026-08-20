@@ -16,7 +16,7 @@
     in dbt_utils. Once you have seen it, writing your own stops feeling like 
     extending the framework and starts feeling like writing a WHERE clause. 
     
-    The `{% test %}` block makes it reusable, taking `model` and `column_name` 
+    The test macro block makes it reusable, taking `model` and `column_name` 
     which dbt supplies automatically from wherever the test is attached. 
     
     NULLS ARE NOT FAILURES HERE. `null < 0` is null, not true, so nulls pass. 

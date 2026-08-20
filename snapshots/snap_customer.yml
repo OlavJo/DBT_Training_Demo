@@ -24,7 +24,7 @@ version: 2
 snapshots: 
 
   - name: snap_customer 
-    relation: ref('stg_customers') 
+    relation: source('tasty_bytes_raw', 'customer') 
     description: > 
         Full history of every customer record. One row per customer per version. 
         Never dropped, never rebuilt — see the warning below. 
@@ -80,14 +80,14 @@ snapshots:
         # as when the change happened, and the difference matters to your 
         # reporting, borrow a column from the source that does know. 
         # ----------------------------------------------------------------- 
-        updated_at: loaded_at 
+        updated_at: _loaded_at 
         
         # ----------------------------------------------------------------- 
         # check_cols — the attributes whose history actually matters. 
         # ----------------------------------------------------------------- 
         # Listed explicitly rather than using `all`. Two reasons: 
         # 
-        #   * `all` would include loaded_at, which changes on every source 
+        #   * `all` would include _loaded_at, which changes on every source 
         #     update. Every run would produce a new version even when nothing 
         #     of substance changed, and the history would fill with noise.
         # 

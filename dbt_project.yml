@@ -21,10 +21,10 @@ macro-paths: ['macros']
 snapshot-paths: ['snapshots']
 analysis-paths: ['analysis']
 
-clean-targets: 
-  - 'target' 
+clean-targets:
+  - 'target'
   - 'dbt_packages'
-  
+
 # ----------------------------------------------------------------------------
 # Model configuration
 # ----------------------------------------------------------------------------
@@ -34,51 +34,51 @@ clean-targets:
 # config block repeated six times.
 # ----------------------------------------------------------------------------
 
-models: 
-    tasty_bytes: 
-    
-        staging: 
-            +materialized: view 
-            +schema: staging 
+models:
+    tasty_bytes:
 
-        intermediate: 
-            # Views, not ephemeral, and deliberately so. Ephemeral models are 
-            # inlined as CTEs into whatever references them: nothing is created in 
-            # the database, they do not appear in Snowsight's object browser, and 
-            # the compiled SQL of the consuming model becomes a deep nest that is 
-            # hard to read in query history. 
-            # 
-            # For a project whose whole purpose is showing people what dbt is 
-            # doing, being able to SELECT * from an intermediate model is worth 
-            # more than the handful of views it costs. int_orders_with_lines is 
-            # left ephemeral as a single worked example of the alternative. 
-            +materialized: view 
+        staging:
+            +materialized: view
+            +schema: staging
+
+        intermediate:
+            # Views, not ephemeral, and deliberately so. Ephemeral models are
+            # inlined as CTEs into whatever references them: nothing is created in
+            # the database, they do not appear in Snowsight's object browser, and
+            # the compiled SQL of the consuming model becomes a deep nest that is
+            # hard to read in query history.
+            #
+            # For a project whose whole purpose is showing people what dbt is
+            # doing, being able to SELECT * from an intermediate model is worth
+            # more than the handful of views it costs. int_orders_with_lines is
+            # left ephemeral as a single worked example of the alternative.
+            +materialized: view
             +schema: intermediate
 
-        marts: 
-            +materialized: table 
-            +schema: marts 			
-            # --------------------------------------------------------------------- 
-            # GRANTS AS CODE. 
-            # dbt re-applies these after every build. This matters more than it 
-            # looks: when dbt drops and recreates a table (any --full-refresh), 
-            # grants applied by hand are silently lost, and the first symptom is 
-            # usually a broken dashboard on a Monday morning. Declaring them here 
-            # means access control lives in version control beside the model, and 
-            # the analytics engineer can manage it without raising a ticket. 
-            # --------------------------------------------------------------------- 
-            +grants: 
+        marts:
+            +materialized: table
+            +schema: marts
+            # ---------------------------------------------------------------------
+            # GRANTS AS CODE.
+            # dbt re-applies these after every build. This matters more than it
+            # looks: when dbt drops and recreates a table (any --full-refresh),
+            # grants applied by hand are silently lost, and the first symptom is
+            # usually a broken dashboard on a Monday morning. Declaring them here
+            # means access control lives in version control beside the model, and
+            # the analytics engineer can manage it without raising a ticket.
+            # ---------------------------------------------------------------------
+            +grants:
                 select: ['DBT_TRAINING_ANALYST']
 
-seeds: 
-    tasty_bytes: 
-        +schema: seeds 
+seeds:
+    tasty_bytes:
+        +schema: seeds
         +quote_columns: false
 
-snapshots: 
-    tasty_bytes: 
+snapshots:
+    tasty_bytes:
         +target_schema: snapshots
-		
+
 # ----------------------------------------------------------------------------
 # Project variables
 # ----------------------------------------------------------------------------
@@ -87,12 +87,12 @@ snapshots:
 # supported way to parameterise a run: dbt run --vars '{key: value}'
 # ----------------------------------------------------------------------------
 
-vars: 
+vars:
 
-    # How far back an incremental run re-reads on each execution. See 
-    # models/marts/fct_orders.sql for why this exists at all. 
-    incremental_lookback_days: 3 
-	
-    # The open-ended "valid to" marker used by the SCD2 dimensions. 
+    # How far back an incremental run re-reads on each execution. See
+    # models/marts/fct_orders.sql for why this exists at all.
+    incremental_lookback_days: 3
+
+    # The open-ended "valid to" marker used by the SCD2 dimensions.
     scd_end_of_time: '9999-12-31'
-	
+

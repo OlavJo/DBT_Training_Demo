@@ -31,10 +31,11 @@ sources:
     schema: RAW 
     
     # Applies to every table below unless overridden. 
-    loaded_at_field: _LOADED_AT 
-    freshness: 
-        warn_after: {count: 36, period: hour} 
-        error_after: {count: 72, period: hour}
+    config: 
+        loaded_at_field: _LOADED_AT 
+        freshness: 
+            warn_after: {count: 36, period: hour} 
+            error_after: {count: 72, period: hour}
         
     tables: 
       - name: customer 
@@ -93,9 +94,10 @@ sources:
             when we found out about it. Those differ for late-arriving orders, 
             and every incremental model in this project watermarks on the latter. 
         # Orders arrive daily, so a tighter threshold than the source default. 
-        freshness: 
-            warn_after: {count: 30, period: hour} 
-            error_after: {count: 48, period: hour} 
+        config: 
+            freshness: 
+                warn_after: {count: 30, period: hour} 
+                error_after: {count: 48, period: hour} 
         columns: 
           - name: order_id 
             data_tests: 
@@ -104,12 +106,14 @@ sources:
           - name: order_status 
             data_tests: 
               - accepted_values: 
-                  values: ['COMPLETED', 'CANCELLED'] 
+                  arguments: 
+                    values: ['COMPLETED', 'CANCELLED'] 
           - name: customer_id 
             data_tests: 
               - relationships: 
-                  to: source('tasty_bytes_raw', 'customer') 
-                  field: customer_id 
+                  arguments: 
+                    to: source('tasty_bytes_raw', 'customer') 
+                    field: customer_id 
                   # WARN, not ERROR — and this is a deliberate teaching point. 
                   # From Day 3, customer 5 is erased from the source while her 
                   # historical orders remain. That is correct behaviour, not a 
@@ -133,10 +137,12 @@ sources:
             data_tests: 
               - not_null 
               - relationships: 
-                  to: source('tasty_bytes_raw', 'order_header') 
-                  field: order_id 
+                  arguments: 
+                    to: source('tasty_bytes_raw', 'order_header') 
+                    field: order_id 
           - name: menu_item_id 
             data_tests: 
               - relationships: 
-                  to: source('tasty_bytes_raw', 'menu_item') 
-                  field: menu_item_id
+                  arguments: 
+                    to: source('tasty_bytes_raw', 'menu_item') 
+                    field: menu_item_id

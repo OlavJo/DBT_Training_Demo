@@ -40,7 +40,8 @@ models:
       - name: loyalty_tier 
         data_tests: 
           - accepted_values: 
-              values: ['BRONZE', 'SILVER', 'GOLD', 'PLATINUM'] 
+              arguments: 
+                values: ['BRONZE', 'SILVER', 'GOLD', 'PLATINUM'] 
       - name: is_deleted_in_source 
         description: > 
             True where the customer has been erased from the source system. 
@@ -61,17 +62,20 @@ models:
       # no package required. See those files for what they actually do. 
       # ------------------------------------------------------------------- 
       - scd2_no_overlapping_versions: 
-          entity_column: customer_id 
-          valid_from_column: valid_from 
-          valid_to_column: valid_to 
+          arguments: 
+            entity_column: customer_id 
+            valid_from_column: valid_from 
+            valid_to_column: valid_to 
       - scd2_exactly_one_current: 
-          entity_column: customer_id 
-          is_current_column: is_current 
+          arguments: 
+            entity_column: customer_id 
+            is_current_column: is_current 
           # Customer 5 is erased on Day 3 and correctly has NO current 
           # version afterwards. That is the intended behaviour of 
           # hard_deletes: invalidate, so deleted entities are excluded from 
           # this test rather than the test being weakened for everyone. 
-          where: "not is_deleted_in_source" 
+          config: 
+            where: "not is_deleted_in_source" 
     columns: 
       - name: customer_history_key 
         description: > 
@@ -105,16 +109,19 @@ models:
       - name: truck_status 
         data_tests: 
           - accepted_values: 
-              values: ['ACTIVE', 'MAINTENANCE', 'RETIRED'] 
+              arguments: 
+                values: ['ACTIVE', 'MAINTENANCE', 'RETIRED'] 
               
   - name: dim_truck_history 
     description: Full SCD Type 2 truck dimension. One row per truck per version. 
     data_tests: 
       - scd2_no_overlapping_versions: 
+          arguments: 
             entity_column: truck_id 
             valid_from_column: valid_from 
             valid_to_column: valid_to 
       - scd2_exactly_one_current: 
+          arguments: 
             entity_column: truck_id 
             is_current_column: is_current 
     columns:
@@ -158,8 +165,8 @@ models:
             between "this must never happen" and "someone should look at this". 
         data_tests: 
           - not_negative: 
-            config: 
-                severity: warn 
+                config: 
+                    severity: warn 
                 
   - name: dim_date 
     description: Calendar dimension, 2026-2028, generated without a package. 
@@ -191,18 +198,21 @@ models:
         data_tests: 
           - not_null 
           - relationships: 
-              to: ref('dim_customer') 
-              field: customer_key 
+              arguments: 
+                to: ref('dim_customer') 
+                field: customer_key 
       - name: truck_key 
         data_tests: 
           - relationships: 
-              to: ref('dim_truck') 
-              field: truck_key 
+              arguments: 
+                to: ref('dim_truck') 
+                field: truck_key 
       - name: date_key 
         data_tests: 
           - relationships: 
-              to: ref('dim_date') 
-              field: date_key 
+              arguments: 
+                to: ref('dim_date') 
+                field: date_key 
       - name: gross_revenue 
         data_tests: [not_negative] 
       - name: net_revenue 
@@ -236,15 +246,17 @@ models:
         data_tests: 
           - not_null 
           - relationships: 
-              to: ref('fct_orders') 
-              field: order_key 
+              arguments: 
+                to: ref('fct_orders') 
+                field: order_key 
       - name: customer_key 
         description: Points at dim_customer — the customer as they are TODAY. 
         data_tests: 
           - not_null 
           - relationships: 
-              to: ref('dim_customer') 
-              field: customer_key 
+              arguments: 
+                to: ref('dim_customer') 
+                field: customer_key 
       - name: customer_history_key 
         description: > 
             Points at dim_customer_history — the customer as they were ON THE 
@@ -253,13 +265,15 @@ models:
         data_tests: 
           - not_null 
           - relationships: 
-              to: ref('dim_customer_history') 
-              field: customer_history_key 
+              arguments: 
+                to: ref('dim_customer_history') 
+                field: customer_history_key 
       - name: menu_item_key 
         data_tests: 
           - relationships: 
-              to: ref('dim_menu_item') 
-              field: menu_item_key 
+              arguments: 
+                to: ref('dim_menu_item') 
+                field: menu_item_key 
       - name: quantity 
         data_tests: [not_negative] 
       - name: line_gross_revenue 
@@ -269,8 +283,8 @@ models:
             Warning only — a line sold below cost is possible and legitimate. 
         data_tests: 
           - not_negative: 
-              config: 
-                  severity: warn 
+                config: 
+                    severity: warn 
       - name: customer_city_at_order 
         description: > 
             The customer's city on the day of the sale. Compare with 
@@ -286,9 +300,10 @@ models:
       # The grain test. "One row per truck per day" is only a comment until 
       # something enforces it. 
       - unique_combination_of_columns: 
-          combination_of_columns: 
-            - date_key 
-            - truck_key 
+          arguments: 
+            combination_of_columns: 
+              - date_key 
+              - truck_key 
     columns: 
       - name: gross_revenue 
         data_tests: [not_negative] 

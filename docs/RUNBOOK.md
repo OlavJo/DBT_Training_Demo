@@ -72,7 +72,17 @@ Run `setup/01_day1_initial_load.sql` as `DBT_TRAINING_INGEST`. Show the CSVs
 being read directly from the git repository stage — the data and the code that
 loads it are the same commit.
 
-Then, in the Workspace:
+Then, in the Workspace dbt tab (the tab labelled with the project name and a
+dbt icon, next to Query History):
+> **How to run dbt commands in Snowsight:** Click the dropdown arrow next to
+> the "Compile" button. Select the command from the list (seed, snapshot,
+> build, run, test, etc.), or type a custom command. The "Profile" selector
+> at the top of the tab picks which target (dev/prod) from `profiles.yml`
+> to use — leave it on `dev`.
+>
+> You do **not** need to "Connect → Deploy dbt project" first. The dbt tab
+> runs commands directly from the workspace files — no deployed project
+> object is required for interactive use.
 
 ```
     dbt seed
