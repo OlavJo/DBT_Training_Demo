@@ -22,8 +22,8 @@ teaches nothing they need and spends credibility you will want later.
 | 5 | Create the Workspace in Snowsight from the git repo | Projects → Workspaces → Create from git. Snowflake auto-detects `dbt_project.yml` and shows a dbt tab — all live commands run from there |
 | 6 | *(Optional)* Create the dbt project object | Only needed if you plan to demonstrate scheduling. Connect → Deploy dbt project → `TASTY_BYTES_DBT_PROJECT` in `DBT_TRAINING_DB.DEV`. The live session runs entirely from the workspace dbt tab. |
 | 7 | **Do a full dry run** | All three days end to end. Roughly 40 minutes. Do not skip this |
-| 8 | Reset with `99_teardown.sql` section 1 | Drops the database only, keeping roles and integration |
-| 9 | Re-run `setup/00_admin_setup.sql` sections 3–5 | Recreates database, schemas, git repository |
+| 8 | Reset with `99_teardown.sql` | Run just section 1 to drop the database only, keeping roles and integration |
+| 9 | Re-run `setup/00_admin_setup.sql` sections 3–5 | Recreates database, schemas, git repository. NOTE: If the git secret is recreated, existing connected workspaces will fail to re-connect as the internal ID of the secret changes. To re-connect, "Changes" > "..." >  "Edit credentials" and reselect the secret. |
 
 **Rehearsal is not optional.** Every number in the evidence queries should be
 one you have already seen on your own screen. The session depends on you
