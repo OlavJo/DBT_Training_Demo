@@ -1,7 +1,9 @@
 # Trainer Runbook
 
 **Format:** trainer-led demo. Team watches, discusses, asks questions.
+
 **Environment:** Snowflake training account, Snowsight Workspace connected to git.
+
 **dbt version:** 1.11 on dbt Projects on Snowflake.
 
 ---
