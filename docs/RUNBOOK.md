@@ -20,7 +20,7 @@ teaches nothing they need and spends credibility you will want later.
 | 3 | Edit `setup/00_admin_setup.sql` | Replace `<YOUR_GITHUB_ORG_OR_USER>`, `<YOUR_REPO_NAME>`, username and PAT |
 | 4 | Run `setup/00_admin_setup.sql` as ACCOUNTADMIN | Creates roles, warehouses, database, git integration |
 | 5 | Create the Workspace in Snowsight from the git repo | Projects → Workspaces → Create from git. Snowflake auto-detects `dbt_project.yml` and shows a dbt tab — all live commands run from there |
-| 6 | *(Optional)* Create the dbt project object | Only needed if you plan to demonstrate scheduling. Connect → Deploy dbt project → `TASTY_BYTES_DBT_PROJECT` in `DBT_TRAINING_DB.DEV`. The live session runs entirely from the workspace dbt tab. Snowflake detects the dbt project and provisions it automatically. |
+| 6 | *(Optional)* Create the dbt project object | Only needed if you plan to demonstrate scheduling. Connect → Deploy dbt project → `TASTY_BYTES_DBT_PROJECT` in `DBT_TRAINING_DB.DEV`. The live session runs entirely from the workspace dbt tab. |
 | 7 | **Do a full dry run** | All three days end to end. Roughly 40 minutes. Do not skip this |
 | 8 | Reset with `99_teardown.sql` section 1 | Drops the database only, keeping roles and integration |
 | 9 | Re-run `setup/00_admin_setup.sql` sections 3–5 | Recreates database, schemas, git repository |
