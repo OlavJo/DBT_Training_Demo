@@ -16,8 +16,7 @@ teaches nothing they need and spends credibility you will want later.
 | # | Step | Notes |
 |---|---|---|
 | 1 | Push this project to a GitHub repo | Must have at least one commit — Snowflake cannot connect to an empty repo |
-| 2 | Decide GitHub auth | PAT in a Snowflake secret is the safe default. OAuth2 needs GitHub org-admin approval in 
-most corporate orgs — check this **now**, not on the morning |
+| 2 | Decide GitHub auth | PAT in a Snowflake secret is the safe default. OAuth2 needs GitHub org-admin approval in most corporate orgs — check this **now**, not on the morning |
 | 3 | Edit `setup/00_admin_setup.sql` | Replace `<YOUR_GITHUB_ORG_OR_USER>`, `<YOUR_REPO_NAME>`, username and PAT |
 | 4 | Run `setup/00_admin_setup.sql` as ACCOUNTADMIN | Creates roles, warehouses, database, git integration |
 | 5 | Create the Workspace in Snowsight from the git repo | Projects → Workspaces → Create from git |
