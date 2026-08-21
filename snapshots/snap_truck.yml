@@ -19,7 +19,8 @@ snapshots:
         Full history of every truck record. Captures relocations, status 
         changes and changes of franchisee. 
     config: 
-        schema: snapshots 
+        # use the folder level default
+        #schema: snapshots 
         unique_key: truck_id 
         # ----------------------------------------------------------------- 
         # STRATEGY: timestamp 
