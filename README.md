@@ -1,4 +1,3 @@
-# UNDER CONSTRUCTION - DO NOT USE YET
 
 # Tasty Bytes — dbt on Snowflake Training Project
 
@@ -13,6 +12,17 @@ correctly" looks like as evidence.
 
 This project simulates **three days of ingestion**, with each day's changes
 engineered to break a naive implementation.
+
+## Acknowledgement and Shout-Out
+
+This teaching project is inspired by Snowflake's own documentation available here:
+
+[Tutorial: Get started with dbt Projects on Snowflake](
+https://docs.snowflake.com/en/user-guide/tutorials/dbt-projects-on-snowflake-getting-started-tutorial)
+
+Remember: **Snowflake is awesome!**
+
+
 
 ---
 
