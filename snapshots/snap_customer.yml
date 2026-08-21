@@ -30,7 +30,8 @@ snapshots:
         Never dropped, never rebuilt — see the warning below. 
         
     config: 
-        schema: snapshots 
+        # use the folder level default
+        #schema: snapshots 
         unique_key: customer_id 
         
         # ----------------------------------------------------------------- 
