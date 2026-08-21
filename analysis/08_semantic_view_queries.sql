@@ -38,18 +38,26 @@ describe semantic view DBT_TRAINING_DB.DEV_MARTS.TASTY_BYTES_SALES;
 -- 2. Total revenue and order count. No joins, no group by, no knowledge of
 -- the underlying tables required.
 -- ---------------------------------------------------------------------------
-select *
+/*select *
 from semantic_view( 
         DBT_TRAINING_DB.DEV_MARTS.TASTY_BYTES_SALES 
         metrics (total_revenue, order_count, avg_order_value)
     )
 ;
+*/
+
+SELECT 
+    AGG(total_revenue),
+    AGG(order_count),
+    AGG(avg_order_value)
+FROM DBT_TRAINING_DB.DEV_MARTS.TASTY_BYTES_SALES;
 
 
 -- ---------------------------------------------------------------------------
 -- 3. Revenue by truck. The join to dim_truck is implied by the relationship
 -- declared in the semantic view — the query does not mention it.
 -- ---------------------------------------------------------------------------
+/*
 select *
 from semantic_view( 
         DBT_TRAINING_DB.DEV_MARTS.TASTY_BYTES_SALES 
@@ -58,12 +66,23 @@ from semantic_view(
     )
 order by total_revenue desc
 ;
+*/
+
+SELECT 
+    truck_name,
+    AGG(total_revenue) AS total_revenue,
+    AGG(total_units) AS total_units,
+    AGG(order_count) AS order_count
+FROM DBT_TRAINING_DB.DEV_MARTS.TASTY_BYTES_SALES
+GROUP BY truck_name
+ORDER BY total_revenue DESC;
 
 
 -- ---------------------------------------------------------------------------
 -- 4. Margin by menu category and day of week. Three tables joined, and the
 -- query names none of them.
 -- ---------------------------------------------------------------------------
+/*
 select *
 from semantic_view( 
         DBT_TRAINING_DB.DEV_MARTS.TASTY_BYTES_SALES 
@@ -74,6 +93,21 @@ order by
     item_category, 
     day_of_week_name
 ;
+*/
+
+SELECT 
+    item_category,
+    day_of_week_name,
+    AGG(total_revenue),
+    AGG(total_margin),
+    AGG(gross_margin_pct)
+FROM DBT_TRAINING_DB.DEV_MARTS.TASTY_BYTES_SALES
+GROUP BY 
+    item_category, 
+    day_of_week_name
+ORDER BY 
+    item_category, 
+    day_of_week_name;
 
 
 -- ---------------------------------------------------------------------------
@@ -97,6 +131,7 @@ order by
 -- decision easier to consume — and easier to consume WRONGLY if nobody
 -- wrote down which question it answers.
 -- ---------------------------------------------------------------------------
+/*
 select *
 from semantic_view( 
         DBT_TRAINING_DB.DEV_MARTS.TASTY_BYTES_SALES 
@@ -107,11 +142,26 @@ order by
     customer_city, 
     loyalty_tier
 ;
+*/
+
+SELECT 
+    customer_city,
+    loyalty_tier,
+    AGG(total_revenue),
+    AGG(order_count)
+FROM DBT_TRAINING_DB.DEV_MARTS.TASTY_BYTES_SALES
+GROUP BY 
+    customer_city, 
+    loyalty_tier
+ORDER BY 
+    customer_city, 
+    loyalty_tier;
 
 
 -- ---------------------------------------------------------------------------
 -- 6. Daily trend.
 -- ---------------------------------------------------------------------------
+/*
 select *
 from semantic_view( 
         DBT_TRAINING_DB.DEV_MARTS.TASTY_BYTES_SALES 
@@ -120,6 +170,17 @@ from semantic_view(
     )
 order by order_date
 ;
+*/
+
+SELECT 
+    order_date,
+    AGG(total_revenue),
+    AGG(order_count),
+    AGG(total_units)
+FROM DBT_TRAINING_DB.DEV_MARTS.TASTY_BYTES_SALES
+GROUP BY order_date
+ORDER BY order_date;
+
 
 
 /* 

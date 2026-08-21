@@ -78,7 +78,7 @@ seeds:
 
 snapshots:
     # The Jinja gets highlighted here as a linting error - ignore it!
-    +schema: '{{ target.name }}_snapshots'
+    +schema: snapshots
 
 # ----------------------------------------------------------------------------
 # Project variables
