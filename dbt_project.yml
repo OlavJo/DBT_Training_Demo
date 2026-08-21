@@ -35,39 +35,41 @@ clean-targets:
 # ----------------------------------------------------------------------------
 
 models:
-
-    staging:
-        +materialized: view
-        +schema: staging
-
-    intermediate:
-        # Views, not ephemeral, and deliberately so. Ephemeral models are
-        # inlined as CTEs into whatever references them: nothing is created in
-        # the database, they do not appear in Snowsight's object browser, and
-        # the compiled SQL of the consuming model becomes a deep nest that is
-        # hard to read in query history.
-        #
-        # For a project whose whole purpose is showing people what dbt is
-        # doing, being able to SELECT * from an intermediate model is worth
-        # more than the handful of views it costs. int_orders_with_lines is
-        # left ephemeral as a single worked example of the alternative.
-        +materialized: view
-        +schema: intermediate
-
-    marts:
-        +materialized: table
-        +schema: marts
-        # ---------------------------------------------------------------------
-        # GRANTS AS CODE.
-        # dbt re-applies these after every build. This matters more than it
-        # looks: when dbt drops and recreates a table (any --full-refresh),
-        # grants applied by hand are silently lost, and the first symptom is
-        # usually a broken dashboard on a Monday morning. Declaring them here
-        # means access control lives in version control beside the model, and
-        # the analytics engineer can manage it without raising a ticket.
-        # ---------------------------------------------------------------------
-        +grants:
-            select: ['DBT_TRAINING_ANALYST']
+    # The project name is required here, even though it doesn't refer to a folder
+    tasty_bytes:
+    
+        staging:
+            +materialized: view
+            +schema: staging
+    
+        intermediate:
+            # Views, not ephemeral, and deliberately so. Ephemeral models are
+            # inlined as CTEs into whatever references them: nothing is created in
+            # the database, they do not appear in Snowsight's object browser, and
+            # the compiled SQL of the consuming model becomes a deep nest that is
+            # hard to read in query history.
+            #
+            # For a project whose whole purpose is showing people what dbt is
+            # doing, being able to SELECT * from an intermediate model is worth
+            # more than the handful of views it costs. int_orders_with_lines is
+            # left ephemeral as a single worked example of the alternative.
+            +materialized: view
+            +schema: intermediate
+    
+        marts:
+            +materialized: table
+            +schema: marts
+            # ---------------------------------------------------------------------
+            # GRANTS AS CODE.
+            # dbt re-applies these after every build. This matters more than it
+            # looks: when dbt drops and recreates a table (any --full-refresh),
+            # grants applied by hand are silently lost, and the first symptom is
+            # usually a broken dashboard on a Monday morning. Declaring them here
+            # means access control lives in version control beside the model, and
+            # the analytics engineer can manage it without raising a ticket.
+            # ---------------------------------------------------------------------
+            +grants:
+                select: ['DBT_TRAINING_ANALYST']
 
 seeds:
 
