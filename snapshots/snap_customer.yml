@@ -30,8 +30,8 @@ snapshots:
         Never dropped, never rebuilt — see the warning below. 
         
     config: 
-        # use the folder level default
-        #schema: snapshots 
+        # Use the folder level default schema
+        
         unique_key: customer_id 
         
         # ----------------------------------------------------------------- 
@@ -119,10 +119,9 @@ snapshots:
         # timestamp, the version stops being current, and the history is 
         # preserved so her past orders still reconcile. 
         # 
-        # (dbt 1.9 replaced the older `invalidate_hard_deletes: true` with this 
-        # config. The third option, `new_record`, writes an explicit tombstone 
+        # The third option, `new_record`, writes an explicit tombstone 
         # row instead — useful when downstream consumers need to see the 
-        # deletion as an event rather than infer it from a closed window.) 
+        # deletion as an event rather than infer it from a closed window.
         # ----------------------------------------------------------------- 
         hard_deletes: invalidate 
         
@@ -152,7 +151,4 @@ snapshots:
 # in clean-targets, and why "just drop and rebuild it" is the one instinct
 # to unlearn here.
 #
-# (In a training account that gets torn down at the end of the session, this
-# warning is admittedly somewhat ironic. The irony is worth pointing out —
-# it makes the lesson stick.)
 # =============================================================================
