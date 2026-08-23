@@ -7,13 +7,17 @@
 # and this file only records the decisions that differ from the defaults.
 # ============================================================================
 
+# The project name
 name: 'tasty_bytes'
+# The project version (informational)
 version: '1.0.0'
+# Not needed: 2 is the default "to use the modern syntax"
 config-version: 2
 
 # The profile to use. On DPoS this resolves to the project-local profiles.yml.
 profile: 'tasty_bytes'
 
+# Describe the folder names used in the dbt project folder
 model-paths: ['models']
 seed-paths: ['seeds']
 test-paths: ['tests']
@@ -21,6 +25,7 @@ macro-paths: ['macros']
 snapshot-paths: ['snapshots']
 analysis-paths: ['analysis']
 
+# These folders will be rebuilt by DBT and so can be deleted (NEVER in version control)
 clean-targets:
   - 'target'
   - 'dbt_packages'
@@ -39,6 +44,10 @@ models:
     tasty_bytes:
     
         staging:
+            # Core DBT values: view (default), table (drop and rebuild every run), 
+            #                  incremental (appends/ updates only new/ changed data), 
+            #                  ephemeral (no object created - use as CTE in dependent models)
+            # Snowflake-specific materializations: dynamic_table, iceberg
             +materialized: view
             +schema: staging
     
@@ -74,6 +83,7 @@ models:
 seeds:
 
     +schema: seeds
+    # Set to true for case-sensitive column names
     +quote_columns: false
 
 snapshots:

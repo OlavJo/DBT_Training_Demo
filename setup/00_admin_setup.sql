@@ -15,10 +15,10 @@
     ---------------------------------------------------------------------------
     Four roles, each standing for a real actor in the pipeline:
 
-        DBT_TRAINING_ADMIN             the platform owner (you)
-        DBT_TRAINING_INGEST         the SOURCE SYSTEM — may write to RAW, nothing else
-        DBT_TRAINING_TRANSFORM         dbt — may READ raw, owns the modelled schemas
-        DBT_TRAINING_ANALYST         BI tools and business users — marts only
+        DBT_TRAINING_ADMIN              the platform owner (you)
+        DBT_TRAINING_INGEST             the SOURCE SYSTEM — may write to RAW, nothing else
+        DBT_TRAINING_TRANSFORM          dbt — may READ raw, owns the modelled schemas
+        DBT_TRAINING_ANALYST            BI tools and business users — marts only
 
     The split between INGEST and TRANSFORM is the important one. It makes dbt's
     read-only relationship to raw data structurally enforced rather than merely
