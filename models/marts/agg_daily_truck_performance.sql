@@ -3,8 +3,8 @@
     --------------------------------------------------------------------------- 
     Revenue, margin and volume per truck per day. Grain: date x truck. 
     
-    MATERIALISED AS A TABLE, REBUILT IN FULL ON EVERY RUN — and the contrast 
-    with the incremental facts beside it is the lesson. 
+    MATERIALISED AS A TABLE, REBUILT IN FULL ON EVERY RUN — contrast with the 
+    incremental facts.
     
     Why not make this incremental too? Because it would be wrong. 
     

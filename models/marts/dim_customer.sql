@@ -32,7 +32,7 @@
     (A production build would go further and null out or hash the name, email 
     and phone for erased customers while keeping the key and the aggregates. 
     That is a data-protection design question rather than a dbt one, and it is 
-    left out here to keep the example readable.)
+    left out here to keep the example simple.)
 */
 
 with customer_scd as ( 

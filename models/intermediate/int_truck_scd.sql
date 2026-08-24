@@ -11,9 +11,7 @@
     
     That the two models are nearly identical is itself worth noticing. Once 
     the snapshot is configured, presenting a second Type 2 dimension is a 
-    copy of a pattern, not a fresh piece of engineering. Compare with 
-    maintaining two hand-written merge procedures that drifted apart over 
-    three years because two different people touched them.
+    copy of a pattern, not a fresh piece of engineering. 
 */
 
 with snapshotted as ( 
@@ -64,6 +62,7 @@ versioned as (
                 partition by truck_id order by dbt_valid_from 
                 ) = 1 
                 then to_timestamp_ntz('1900-01-01 00:00:00') 
+                -- then to_timestamp_ntz('{{ var("scd_start_of_time") }} 00:00:00')
             else dbt_valid_from 
         end as effective_valid_from 
         

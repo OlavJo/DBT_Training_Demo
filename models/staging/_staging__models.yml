@@ -35,13 +35,13 @@ models:
       - name: truck_id 
         data_tests: [unique, not_null] 
       - name: truck_status 
-        description: ACTIVE, MAINTENANCE or RETIRED. Truck 4 changes on Day 3. 
+        description: ACTIVE, MAINTENANCE or RETIRED. # Truck 4 changes on Day 3. 
         data_tests: 
           - accepted_values: 
               arguments: 
                 values: ['ACTIVE', 'MAINTENANCE', 'RETIRED'] 
       - name: primary_location_id 
-        description: Home pitch. Truck 2 moves 101 -> 104 on Day 2. 
+        description: Home pitch. # Truck 2 moves 101 -> 104 on Day 2. 
         data_tests: 
           - relationships: 
               arguments: 

@@ -4,8 +4,6 @@
     ----------------------------------------------------------------------------
     Fails if any entity has two versions whose validity windows overlap. 
     
-    THIS IS THE TEST THAT SAVES YOU. 
-    
     A Type 2 dimension with overlapping windows does not throw an error, does 
     not look wrong, and does not fail any conventional test. `unique` on the 
     version key still passes. Row counts look plausible. Everything appears 
@@ -21,12 +19,12 @@
     most organisations is a quarter later, and then you spend a fortnight
     explaining it. 
     
-    dbt's snapshots will not produce this on their own. Hand-written SCD2 
+    NOTE: dbt's snapshots will not produce this on their own. Hand-written SCD2 
     logic does it regularly, usually when the previous version's end date is 
     set with <= instead of <, or when a late-arriving change is inserted 
     without closing the record it supersedes. If you are migrating a 
     hand-built Type 2 dimension into dbt, run this test against the OLD table 
-    first. It is frequently an uncomfortable morning. 
+    first.
     
     ---------------------------------------------------------------------------- 
     HOW IT WORKS 

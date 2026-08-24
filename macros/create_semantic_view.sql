@@ -34,7 +34,7 @@
     payoff for the star schema, not a substitute for it. 
     
     ---------------------------------------------------------------------------- 
-    FACTS vs METRICS — the distinction that catches people out 
+    FACTS vs METRICS
     
     FACTS are ROW-LEVEL expressions. `quantity * unit_price` for one line. 
     METRICS are AGGREGATIONS over facts. `SUM(...)` across many lines. 

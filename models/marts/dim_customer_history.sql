@@ -33,8 +33,7 @@
     revenue is counted twice. 
     
     The scd2_no_overlapping_versions and scd2_exactly_one_current tests in 
-    _marts__models.yml exist precisely to catch that class of error. They are 
-    the tests that would actually save you in production.
+    _marts__models.yml exist precisely to catch that class of error. 
 */
 
 with customer_scd as ( 

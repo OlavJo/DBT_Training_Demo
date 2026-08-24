@@ -28,8 +28,8 @@
         
     Why that matters: the default behaviour tells you 47 rows failed. It does 
     not tell you WHICH. So the first thing anyone does after a failed test is 
-    reconstruct the query by hand to find out — and on a complicated test they 
-    usually reconstruct it slightly wrong. 
+    reconstruct the query by hand to find out — and on a complicated test it 
+    might be reconstructed slightly wrong. 
     
     With store_failures, the evidence is already sitting in a table. You can 
     query it, join it back to the source, share it with whoever owns the 

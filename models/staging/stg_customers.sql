@@ -6,8 +6,8 @@
     STAGING RULES — the same six apply to every model in this folder: 
         1. One staging model per source table. No more, no fewer. 
         2. No joins. 
-        3. No filtering of rows. 
-        4. No aggregation. 
+        3. No business logic filtering of rows. 
+        4. No business logic aggregation. 
         5. Rename to the business vocabulary, cast types, tidy whitespace. 
         6. Materialised as a view, so it costs nothing to keep current. 
         

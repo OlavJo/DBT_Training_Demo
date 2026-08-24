@@ -11,10 +11,8 @@
     that one design decision and this Type 1 dimension would silently reprice 
     the entire sales history every time somebody adjusted a menu. 
     
-    Worth stating plainly during the session: the reason a Type 1 dimension is 
-    acceptable here is a property of the FACT table, not of the dimension. The 
-    two decisions are made together, and reviewing one without the other is 
-    how warehouses end up with restating history nobody ordered. 
+    The reason a Type 1 dimension is acceptable here is a property of the FACT 
+    table, not of the dimension. The two decisions are made together.
     
     The price on this dimension remains genuinely useful for a different 
     question — comparing what an item sells for today against what it sold 

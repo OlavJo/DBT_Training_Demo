@@ -23,8 +23,7 @@
             
     Together these two tests are the complete correctness contract for a 
     Type 2 dimension: no gaps, no overlaps, exactly one row in force at any 
-    moment. Any hand-written SCD2 implementation should be held to them, and 
-    most have never been. 
+    moment. 
     
     ---------------------------------------------------------------------------- 
     THE `where` ARGUMENT 
@@ -41,9 +40,7 @@
     
     Note what the `where` does here: it excludes the legitimately deleted 
     entities from the test rather than relaxing the rule for everyone. The 
-    invariant stays strict for every entity it should apply to. Weakening a 
-    test until it passes is how a test suite becomes decorative — narrowing
-    its scope to exactly the rows the rule governs is the honest fix. 
+    invariant stays strict for every entity it should apply to.  
     
     ---------------------------------------------------------------------------- 
     USAGE 

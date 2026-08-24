@@ -107,3 +107,5 @@ vars:
     # The open-ended "valid to" marker used by the SCD2 dimensions.
     scd_end_of_time: '9999-12-31'
 
+    # The open-ended "valid from" marker used by the SCD2 dimensions.
+    scd_start_of_time: '1900-01-01'

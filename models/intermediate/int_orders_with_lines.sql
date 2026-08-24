@@ -15,7 +15,9 @@
     The cost: you cannot SELECT * from it to debug, it does not appear in 
     Snowsight's object browser, and it makes the compiled SQL of fct_orders 
     deeper. That is why every OTHER intermediate model in this project is a 
-    view. Ephemeral is right for a private helper with exactly one consumer; 
+    view. 
+    
+    Ephemeral is right for a private helper with exactly one consumer; 
     it is a poor default. 
     
     WHY THIS MODEL EXISTS — fan-out control 
@@ -28,10 +30,9 @@
     by an amount that varies with basket size. Aggregating to the target grain 
     BEFORE joining makes it structurally impossible. 
     
-    A familiar discipline for anyone who has built a fact table, and worth 
-    saying plainly: dbt does not protect you from grain errors. It gives you 
-    somewhere to put the guard, and a test (see fct_orders) that proves the 
-    guard is working. 
+    A familiar discipline for anyone who has built a fact table: dbt does not 
+    protect you from grain errors. It gives you somewhere to put the guard, 
+    and a test (see fct_orders) that proves the guard is working. 
     
     THE WATERMARK PROBLEM — read this before touching fct_orders 
     --------------------------------------------------------------------------- 

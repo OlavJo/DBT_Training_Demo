@@ -1,23 +1,15 @@
 /* 
     dim_date 
     --------------------------------------------------------------------------- 
-    A conventional calendar dimension. Nobody in this room needs it explained. 
+    A conventional calendar dimension. 
     
-    The only interesting thing about it is that it is built WITHOUT a package. 
-    dbt_utils.date_spine is the usual answer, and it is unavailable here — so 
-    this uses Snowflake's own GENERATOR table function instead. 
+    It is built WITHOUT a package - dbt_utils.date_spine is the usual answer. 
+    For teaching purposes, use Snowflake's own GENERATOR table function instead. 
     
         table(generator(rowcount => N)) 
         
     produces N rows of nothing, and seq4() numbers them 0..N-1. Add that to a 
-    start date and you have a spine. It is arguably clearer than the package 
-    version, which builds the same thing out of portable SQL because it has to 
-    work on every warehouse dbt supports. 
-    
-    A reasonable general lesson: reach for the platform first. dbt packages 
-    exist largely to paper over differences between warehouses, and when you 
-    have committed to one warehouse, its native features are usually simpler 
-    and always faster. 
+    start date and you have a spine. 
     
     Range is fixed at 2026-2028, which comfortably covers the training data. 
     A production version would derive its bounds from the fact tables.

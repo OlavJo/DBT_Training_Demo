@@ -24,8 +24,9 @@
             
     Note that we keep cancelled orders in the OUTPUT but flag them, and let 
     the fact tables filter. A cancellation is a real business event — you 
-    want to be able to count them and analyse the rate. Discarding rows early 
-    is irreversible; flagging them is not.
+    want to be able to count them and analyse the rate. 
+    
+    Discarding rows early is irreversible; flagging them is not.
 */
 
 with orders as ( 

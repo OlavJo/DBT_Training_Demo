@@ -31,7 +31,7 @@
     In practice this happens when the header and line feeds are loaded 
     separately and one of them is late or partial — which is exactly what 
     the two-table ingestion in this project simulates. 
-    It is a very common real defect and almost never tested for. 
+    It is a very common real defect and often never tested for. 
     
     --------------------------------------------------------------------------- 
     Note this test runs against RAW, not against the marts. That is 

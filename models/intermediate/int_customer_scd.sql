@@ -128,6 +128,7 @@ with_deletion_flag as (
         , case 
             when version_number = 1 
                 then to_timestamp_ntz('1900-01-01 00:00:00') 
+                -- then to_timestamp_ntz('{{ var("scd_start_of_time") }} 00:00:00') 
             else valid_from 
         end as effective_valid_from 
         

@@ -21,8 +21,8 @@ version: 2
 #   =============================================================================
 
 sources: 
-
-  - name: tasty_bytes_raw 
+    
+  - name: tasty_bytes_raw # A namespace for source data
     description: > 
         Operational data landed from the Tasty Bytes point-of-sale and customer 
         systems. Written by the ingestion process, never by dbt — the 
@@ -32,10 +32,12 @@ sources:
     
     # Applies to every table below unless overridden. 
     config: 
+        # Tells dbt which timestamp column in your source table tracks data arrival.
+        # So DBT can calculate the age of the newest record
         loaded_at_field: _LOADED_AT 
         freshness: 
-            warn_after: {count: 36, period: hour} 
-            error_after: {count: 72, period: hour}
+            warn_after: {count: 36, period: hour} # warn if newest record is more than 36 hours old
+            error_after: {count: 72, period: hour} # error if newest record is more than 72 hours old
         
     tables: 
       - name: customer 

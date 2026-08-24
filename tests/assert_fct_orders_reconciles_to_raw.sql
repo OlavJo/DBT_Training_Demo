@@ -10,7 +10,7 @@
     general enough to be worth parameterising. 
     
     --------------------------------------------------------------------------- 
-    WHY THIS IS THE MOST VALUABLE TEST IN THE PROJECT 
+    WHY THIS IS A VALUABLE TEST 
     --------------------------------------------------------------------------- 
     Every other test checks the mart against ITSELF — keys are unique, values 
     are not negative, references resolve. All of those can pass beautifully 

@@ -57,9 +57,9 @@ models:
             `order_ts >= valid_from and order_ts < valid_to`. 
     data_tests: 
       # ------------------------------------------------------------------- 
-      # THE TWO TESTS THAT MATTER MOST IN THIS PROJECT. 
-      # Both are custom generic tests written by hand in tests/generic/ — 
-      # no package required. See those files for what they actually do. 
+      # THE TWO TESTS THAT MATTER MOST FOR SCD2. 
+      # Both are custom generic tests in tests/generic/ — no package 
+      # required. See those files for what they actually do. 
       # ------------------------------------------------------------------- 
       - scd2_no_overlapping_versions: 
           arguments: 
