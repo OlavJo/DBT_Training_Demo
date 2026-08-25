@@ -23,7 +23,6 @@ seed-paths: ['seeds']
 test-paths: ['tests']
 macro-paths: ['macros']
 snapshot-paths: ['snapshots']
-analysis-paths: ['analysis']
 
 # These folders will be rebuilt by DBT and so can be deleted (NEVER in version control)
 clean-targets:
