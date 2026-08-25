@@ -61,8 +61,8 @@ versioned as (
             when row_number() over ( 
                 partition by truck_id order by dbt_valid_from 
                 ) = 1 
-                then to_timestamp_ntz('1900-01-01 00:00:00') 
-                -- then to_timestamp_ntz('{{ var("scd_start_of_time") }} 00:00:00')
+                -- then to_timestamp_ntz('1900-01-01 00:00:00') 
+                then to_timestamp_ntz('{{ var("scd_start_of_time") }} 00:00:00')
             else dbt_valid_from 
         end as effective_valid_from 
         
