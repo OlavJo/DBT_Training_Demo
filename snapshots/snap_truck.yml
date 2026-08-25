@@ -14,8 +14,8 @@ version: 2
 snapshots: 
 
   - name: snap_truck 
-    #relation: source('tasty_bytes_raw', 'truck') 
-    relation: ref('stg_trucks')
+    relation: source('tasty_bytes_raw', 'truck') 
+    #relation: ref('stg_trucks')
     description: > 
         Full history of every truck record. Captures relocations, status 
         changes and changes of franchisee. 
