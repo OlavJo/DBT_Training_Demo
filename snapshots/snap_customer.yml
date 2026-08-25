@@ -25,6 +25,7 @@ snapshots:
 
   - name: snap_customer 
     relation: source('tasty_bytes_raw', 'customer') 
+    # This is also possible, but the initial run requires stg to be built first
     #relation: ref('stg_customers')
     description: > 
         Full history of every customer record. One row per customer per version. 
