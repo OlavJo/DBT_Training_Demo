@@ -253,3 +253,17 @@ ORDER BY 1;
 Business time and load time are still neatly separated by a single nightly batch.
 That changes tomorrow.
 */
+
+
+/*
+    NEXT STEPS: 
+
+    1.  Once the initial load is completed, explore the DB Catalog > DBT_TRAINING_DB > RAW schema.
+    2.  Issue the initial DBT commands:
+            dbt seed
+            dbt snapshot
+            dbt build
+    3.  Explore the DB Catalog > DBT_TRAINING_DB > (new schemas)
+    4.  Explore the DBT Output, DAG and Performance tabs
+    5.  Run 01_day1_post_dbt_evidence.sql
+*/

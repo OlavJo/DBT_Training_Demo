@@ -1,7 +1,17 @@
 /* 
     stg_order_headers 
     --------------------------------------------------------------------------- 
-    One row per order. THE TWO TIMESTAMPS. This model is where the project's central distinction 
+    One row per order, exactly as the source holds them right now. 
+    
+    STAGING RULES — the same six apply to every model in this folder: 
+        1. One staging model per source table. No more, no fewer. 
+        2. No joins. 
+        3. No business logic filtering of rows. 
+        4. No business logic aggregation. 
+        5. Rename to the business vocabulary, cast types, tidy whitespace. 
+        6. Materialised as a view, so it costs nothing to keep current. 
+    
+    THE TWO TIMESTAMPS. This model is where the project's central distinction 
     first becomes visible in dbt code: 
     
         order_ts        when the sale happened          BUSINESS time 
