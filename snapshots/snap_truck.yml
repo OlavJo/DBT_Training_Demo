@@ -15,6 +15,7 @@ snapshots:
 
   - name: snap_truck 
     relation: source('tasty_bytes_raw', 'truck') 
+    # This is also possible, but the initial run requires stg to be built first
     #relation: ref('stg_trucks')
     description: > 
         Full history of every truck record. Captures relocations, status 
