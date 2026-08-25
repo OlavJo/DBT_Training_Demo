@@ -24,7 +24,8 @@ version: 2
 snapshots: 
 
   - name: snap_customer 
-    relation: source('tasty_bytes_raw', 'customer') 
+    #relation: source('tasty_bytes_raw', 'customer') 
+    relation: ref('stg_customers')
     description: > 
         Full history of every customer record. One row per customer per version. 
         Never dropped, never rebuilt — see the warning below. 
