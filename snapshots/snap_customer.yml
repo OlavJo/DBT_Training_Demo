@@ -135,7 +135,7 @@ snapshots:
         # explicit far-future value lets the join be a plain BETWEEN, which is 
         # easier to read and harder to get wrong. 
         # ----------------------------------------------------------------- 
-        dbt_valid_to_current: "to_timestamp_ntz('{{ var("scd_end_of_time") }} 00:00:00')"
+        dbt_valid_to_current: "to_timestamp_ntz('{{ var('scd_end_of_time') }} 00:00:00')"
         
 # =============================================================================
 # ⚠ READ THIS BEFORE YOU DROP ANYTHING
