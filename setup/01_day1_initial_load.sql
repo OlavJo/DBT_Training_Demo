@@ -265,5 +265,5 @@ That changes tomorrow.
             dbt build
     3.  Explore the DB Catalog > DBT_TRAINING_DB > (new schemas)
     4.  Explore the DBT Output, DAG and Performance tabs
-    5.  Run 01_day1_post_dbt_evidence.sql
+    5.  Run 01_day1_post_dbt.sql
 */
