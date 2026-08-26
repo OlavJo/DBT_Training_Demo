@@ -59,7 +59,7 @@ snapshots:
         # and is stated explicitly here so the contrast with snap_customer is 
         # visible rather than implied. 
         hard_deletes: ignore 
-        dbt_valid_to_current: "to_timestamp_ntz('{{ var("scd_end_of_time") }} 00:00:00')"
+        dbt_valid_to_current: "to_timestamp_ntz('{{ var('scd_end_of_time') }} 00:00:00')"
         
 # =============================================================================
 # The same warning as snap_customer applies: this table cannot be rebuilt
