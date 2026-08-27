@@ -254,8 +254,7 @@ ORDER BY 1;
     2026-02-28      11 orders, 2 LOAD DATES <-- the late arrival 
     2026-03-01      15 orders, 1 load date 
     
-    That "2" is the whole lesson, visible in a single cell. A business date 
-    that was complete yesterday is not complete today. 
+    A business date that was complete yesterday is not complete today. 
 */
 
 /*  Customer 3 in the source: no trace of Seattle remains. */
@@ -291,7 +290,7 @@ WHERE MENU_ITEM_ID = 7;
     NEXT STEPS: 
 
     1.  Issue the initial DBT commands: (The snapshot MUST run first, as the 
-        facts and dims are built on top)
+        dims and facts are built on top)
             dbt snapshot
             dbt build
     2.  Explore the DB Catalog > DBT_TRAINING_DB > history dims and also the facts

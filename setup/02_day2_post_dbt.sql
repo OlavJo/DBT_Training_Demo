@@ -194,7 +194,7 @@ order by
     Order 1099 was placed at 19:30 on 2026-02-28 and only reached the warehouse 
     at 06:00 on 2026-03-02, because the truck's payment terminal was offline. 
     
-    These queries prove three things in order: 
+    These queries prove three things: 
         1. the order is in the fact table at all, 
         2. it is filed under the correct BUSINESS date, and 
         3. the total for 2026-02-28 CHANGED between Day 1 and Day 2. 
@@ -221,9 +221,7 @@ where order_id = 1099
     Expect exactly one row, with business_date 2026-02-28, arrived 
     2026-03-02, and ingestion_lag_days = 2. 
     
-    If this returns NOTHING, the incremental watermark is filtering on 
-    business time instead of ingestion time — which is precisely the mistake 
-    this whole exercise is built to demonstrate. See fct_orders. 
+    See fct_orders. 
 */
 
 
@@ -245,23 +243,17 @@ order by ingestion_lag_days
 /* 
     Expect the overwhelming majority at lag 1 (the normal overnight batch), 
     and exactly ONE order at lag 2. 
-
-    Worth saying out loud: in a real warehouse this distribution is a useful 
-    monitoring metric in its own right. If the tail suddenly lengthens, a 
-    source system is struggling, and you would rather know that from a chart 
-    than from a reconciliation failure a month later. 
 */
 
 
 -- ---------------------------------------------------------------------------
 -- 3. THE PROOF — a "closed" day that moved.
 --
--- Compare this against the figure you recorded for 2026-02-28 after Day 1.
--- It is HIGHER, by exactly the value of order 1099.
+-- Compare this against the figure recorded for 2026-02-28 after Day 1.
+-- It is higher, by exactly the value of order 1099.
 --
--- Nobody reran history. Nobody issued a backfill. The next ordinary
--- incremental run corrected a day that had already been reported, because
--- the watermark was on the right column.
+-- No need to rerun history or do a backfill. The next ordinary
+-- incremental run corrected a day that had already been reported.
 -- ---------------------------------------------------------------------------
 select 
     order_date 

@@ -22,133 +22,11 @@ USE SCHEMA DBT_TRAINING_DB.RAW;
 
 
 /*  =========================================================================== 
-    CHANGE 3 — Customer 1 has been upgraded to GOLD 
-    --------------------------------------------------------------------------- 
-    Amara Osei crosses the spend threshold and moves BRONZE -> GOLD. 
-    
-    A second attribute, on a different customer, changing on a different day. 
-    The snapshot handles it identically to the Denver move on Day 2, which is 
-    the point: once the snapshot is configured, capturing history is not extra 
-    work per attribute. Compare with the hand-written merge you would maintain 
-    to do the same thing, where every new tracked column is a code change. 
-    =========================================================================== */
-    
-UPDATE CUSTOMER 
-    SET 
-        LOYALTY_TIER = 'GOLD', 
-        _LOADED_AT = '2026-03-03 06:00:00' 
-    WHERE CUSTOMER_ID = 1;
-    
-    
-/*  =========================================================================== 
-    CHANGE 4 — Customer 5 has been ERASED from the source system 
-    --------------------------------------------------------------------------- 
-    Elena Petrova exercised her right to erasure. The operational system does 
-    what it is legally obliged to do: it deletes the row outright. 
-    
-    The row is simply GONE. Not flagged, not soft-deleted — absent. 
-    
-    Two things now have to be true at once, and they are in tension:
-    
-        (a) She must disappear from current customer reporting. 
-        (b) Her past orders must still reconcile. Those sales happened, the 
-        revenue is real, and the accounts must still balance. 
-        
-    `hard_deletes: invalidate` on the snapshot closes her final version rather 
-    than losing it, which satisfies both. The dimension keeps the key so the 
-    facts remain joinable, and the mart flags her as deleted in source. 
-    
-    Worth saying out loud: erasure applies to the personal attributes, not to 
-    the existence of the business key. A dimension row that facts point at 
-    cannot simply vanish — the correct answer is to retain the key, scrub or 
-    flag the attributes, and keep the books balanced. This is a modelling 
-    problem, and dbt does not solve it for you; it just makes the history 
-    available to solve it WITH. 
-    =========================================================================== */
-    
-DELETE FROM CUSTOMER WHERE CUSTOMER_ID = 5;
-
-
-/*  =========================================================================== 
-    CHANGE 5 — Truck 4 goes into maintenance; Truck 1 changes hands 
-    --------------------------------------------------------------------------- 
-    Le Petit Crepe (4) is off the road from today. Better Off Bread (1) has 
-    been sold to a new franchisee. 
-    
-    Both bump UPDATED_AT, so snap_truck's timestamp strategy catches them. 
-    Truck 4 takes no orders on 2026-03-02 — you will see it drop out of the 
-    daily performance aggregate while remaining present in the dimension. 
-    =========================================================================== */
-    
-UPDATE TRUCK 
-    SET 
-        TRUCK_STATUS = 'MAINTENANCE', 
-        UPDATED_AT = '2026-03-02 21:30:00', 
-        _LOADED_AT = '2026-03-03 06:00:00' 
-    WHERE TRUCK_ID = 4;
-    
-UPDATE TRUCK 
-    SET 
-        FRANCHISEE_NAME = 'Cascade Street Food Group', 
-        UPDATED_AT = '2026-03-02 22:15:00' , 
-        _LOADED_AT = '2026-03-03 06:00:00' 
-    WHERE TRUCK_ID = 1;
-    
-    
-/*  =========================================================================== 
-    CHANGE 6 — A new customer and a new truck 
-    --------------------------------------------------------------------------- 
-    Grace Lim signs up; Wok On Wheels enters service at RiNo Art District. 
-    
-    Additions are the easy case, and worth thirty seconds precisely because 
-    they are boring: nothing in the dbt project changes, no backfill is 
-    needed, and both appear in the dimensions on the next run. Compare with 
-    the effort of adding a new source row to a hand-built pipeline that has 
-    hard-coded assumptions about which keys exist. 
-    =========================================================================== */
-    
-INSERT INTO CUSTOMER (
-    CUSTOMER_ID, 
-    FIRST_NAME, 
-    LAST_NAME, 
-    EMAIL, 
-    PHONE, 
-    CITY, 
-    COUNTRY, 
-    POSTAL_CODE, 
-    LOYALTY_TIER, 
-    SIGN_UP_DATE, 
-    MARKETING_OPT_IN, 
-    _LOADED_AT
-) VALUES 
-    (7, 'Grace', 'Lim', 'grace.lim@example.com', '+1-303-555-0177', 'Denver',
-        'US', '80205', 'BRONZE', '2026-03-02', TRUE, '2026-03-03 06:00:00')
-    ;
-    
-INSERT INTO TRUCK (
-    TRUCK_ID, 
-    TRUCK_NAME, 
-    MAKE, 
-    MODEL, 
-    YEAR, 
-    PRIMARY_LOCATION_ID, 
-    FRANCHISEE_NAME, 
-    MENU_TYPE_ID, 
-    TRUCK_STATUS, 
-    UPDATED_AT, 
-    _LOADED_AT
-) VALUES 
-    (5, 'Wok On Wheels', 'Chevrolet', 'P30', 2023, 105, 'Lim Enterprises', 2, 
-        'ACTIVE', '2026-03-02 07:00:00', '2026-03-03 06:00:00')
-    ;
-    
-    
-/*  =========================================================================== 
     CHANGE 1 — Thirteen new orders for 2026-03-02 
     --------------------------------------------------------------------------- 
     Note who is NOT here: Truck 4 took no orders, because it went off the road. 
     And customer 5 places no orders, because she no longer exists — but her 
-    earlier orders are still in the warehouse and must still tie out. 
+    earlier orders are still in the warehouse and must still be accounted for. 
     =========================================================================== */
     
 INSERT INTO ORDER_HEADER (
@@ -209,8 +87,7 @@ INSERT INTO ORDER_LINE (
     
 /*  =========================================================================== 
     CHANGE 2 — THE RESTATEMENT 
-    --------------------------------------------------------------------------- 
-    The second most important row in the project. 
+    ---------------------------------------------------------------------------  
     
     Order line 10281 (order 1028, placed 2026-03-01) was keyed in wrong. The 
     customer bought FIVE Quinoa Power Bowls, not two. The correction arrives 
@@ -218,21 +95,12 @@ INSERT INTO ORDER_LINE (
     existing row in place. Same key, new value, new load timestamp. 
     
         QUANTITY    2 -> 5                  at $10.50 each 
-        revenue     $21.00 -> $52.50        a $31.50 correction 
-        
-    This is where `merge` earns its keep. An incremental model configured to 
-    APPEND would insert a SECOND row for order line 10281 — the fact table 
-    would then contain both the wrong figure and the right one, the row count 
-    would rise by one, and revenue would be overstated by $21.00. Nothing 
-    would fail. The books would just be wrong. 
+        revenue     $21.00 -> $52.50        a $31.50 correction  
     
     With `merge` and a `unique_key`, dbt updates the existing row in place: 
     
-        fct_order_lines row count:  UNCHANGED 
-        total revenue:              UP by exactly $31.50 
-        
-    Those two facts together are the proof, and evidence query 05 shows them 
-    side by side. 
+        fct_order_lines             row count:  UNCHANGED 
+        total revenue:              UP by exactly $31.50  
     =========================================================================== */
     
 UPDATE ORDER_LINE 
@@ -240,10 +108,128 @@ UPDATE ORDER_LINE
         QUANTITY = 5, 
         _LOADED_AT = '2026-03-03 06:00:00' 
     WHERE ORDER_LINE_ID = 10281;
+
     
+/*  =========================================================================== 
+    CHANGE 3 — Customer 1 has been upgraded to GOLD 
+    --------------------------------------------------------------------------- 
+    Amara Osei crosses the spend threshold and moves BRONZE -> GOLD. 
+    
+    A second attribute, on a different customer, changing on a different day. 
+    The snapshot handles it identically to the Denver move on Day 2. 
+    =========================================================================== */
+    
+UPDATE CUSTOMER 
+    SET 
+        LOYALTY_TIER = 'GOLD', 
+        _LOADED_AT = '2026-03-03 06:00:00' 
+    WHERE CUSTOMER_ID = 1;
+    
+    
+/*  =========================================================================== 
+    CHANGE 4 — Customer 5 has been ERASED from the source system 
+    --------------------------------------------------------------------------- 
+    Elena Petrova exercised her right to erasure. The operational system does 
+    what it is legally obliged to do: it deletes the row outright. 
+    
+    The row is simply GONE. Not flagged, not soft-deleted — absent. 
+    
+    Two things now have to be true at once, and they are in tension:
+    
+        (a) She must disappear from current customer reporting. 
+        (b) Her past orders must still reconcile. Those sales happened, the 
+        revenue is real, and the accounts must still balance. 
+        
+    `hard_deletes: invalidate` on the snapshot closes her final version rather 
+    than losing it, which satisfies both. The dimension keeps the key so the 
+    facts remain joinable, and the mart flags her as deleted in source. 
+    
+    NOTE: erasure applies to the personal attributes, not to the existence of 
+    the business key. A dimension row that facts point at cannot simply 
+    vanish — the correct answer is to:
+        retain the key, 
+        scrub or flag the attributes, and 
+        keep the books balanced. 
+    This is a modelling problem, and dbt does not solve it for you; it just 
+    makes the history available to solve it WITH. 
+    =========================================================================== */
+    
+DELETE FROM CUSTOMER WHERE CUSTOMER_ID = 5;
+
+
+/*  =========================================================================== 
+    CHANGE 5 — Truck 4 goes into maintenance; Truck 1 changes hands 
+    --------------------------------------------------------------------------- 
+    Le Petit Crepe (4) is off the road from today. Better Off Bread (1) has 
+    been sold to a new franchisee. 
+    
+    Both bump UPDATED_AT, so snap_truck's timestamp strategy catches them. 
+    Truck 4 takes no orders on 2026-03-02 — you will see it drop out of the 
+    daily performance aggregate while remaining present in the dimension. 
+    =========================================================================== */
+    
+UPDATE TRUCK 
+    SET 
+        TRUCK_STATUS = 'MAINTENANCE', 
+        UPDATED_AT = '2026-03-02 21:30:00', 
+        _LOADED_AT = '2026-03-03 06:00:00' 
+    WHERE TRUCK_ID = 4;
+    
+UPDATE TRUCK 
+    SET 
+        FRANCHISEE_NAME = 'Cascade Street Food Group', 
+        UPDATED_AT = '2026-03-02 22:15:00' , 
+        _LOADED_AT = '2026-03-03 06:00:00' 
+    WHERE TRUCK_ID = 1;
+    
+    
+/*  =========================================================================== 
+    CHANGE 6 — A new customer and a new truck 
+    --------------------------------------------------------------------------- 
+    Grace Lim signs up; Wok On Wheels enters service at RiNo Art District. 
+    
+    No backfill is needed, and both appear in the dimensions on the next run. 
+    =========================================================================== */
+    
+INSERT INTO CUSTOMER (
+    CUSTOMER_ID, 
+    FIRST_NAME, 
+    LAST_NAME, 
+    EMAIL, 
+    PHONE, 
+    CITY, 
+    COUNTRY, 
+    POSTAL_CODE, 
+    LOYALTY_TIER, 
+    SIGN_UP_DATE, 
+    MARKETING_OPT_IN, 
+    _LOADED_AT
+) VALUES 
+    (7, 'Grace', 'Lim', 'grace.lim@example.com', '+1-303-555-0177', 'Denver',
+        'US', '80205', 'BRONZE', '2026-03-02', TRUE, '2026-03-03 06:00:00')
+    ;
+    
+INSERT INTO TRUCK (
+    TRUCK_ID, 
+    TRUCK_NAME, 
+    MAKE, 
+    MODEL, 
+    YEAR, 
+    PRIMARY_LOCATION_ID, 
+    FRANCHISEE_NAME, 
+    MENU_TYPE_ID, 
+    TRUCK_STATUS, 
+    UPDATED_AT, 
+    _LOADED_AT
+) VALUES 
+    (5, 'Wok On Wheels', 'Chevrolet', 'P30', 2023, 105, 'Lim Enterprises', 2, 
+        'ACTIVE', '2026-03-02 07:00:00', '2026-03-03 06:00:00')
+    ;
+    
+
     
 /*  --------------------------------------------------------------------------- 
-    VERIFY 
+    VERIFY — what the source now looks like
     --------------------------------------------------------------------------- */
     
 SELECT 
@@ -280,7 +266,25 @@ WHERE CUSTOMER_ID = 5;
     customer 5 still present?       NO - erased 
 */
 
-/*  The restated line, as the source now holds it. */
+
+SELECT 
+    DATE(ORDER_TS) AS order_date, 
+    COUNT(*) AS orders, 
+    COUNT(DISTINCT DATE(_LOADED_AT)) AS distinct_load_dates,
+    MAX(_LOADED_AT) AS latest_load
+FROM ORDER_HEADER
+GROUP BY 1
+ORDER BY 1;
+
+/* Expected: ##TODO UPDATE! 
+    2026-02-27      10 orders, 1 load date 
+    2026-02-28      11 orders, 2 LOAD DATES <-- the late arrival 
+    2026-03-01      15 orders, 1 load date 
+    
+    A business date that was complete yesterday is not complete today. 
+*/
+
+/*  The restated order line, as the source now holds it. */
 SELECT 
     ORDER_LINE_ID, 
     ORDER_ID, 
@@ -292,4 +296,37 @@ SELECT
 FROM ORDER_LINE 
 WHERE ORDER_LINE_ID = 10281;
 
-/* NEXT: `dbt snapshot`, then `dbt build`, then evidence queries 05 and 06. */
+
+/* 
+    This is what the customer table now looks like. 
+    Note that customer 5 is gone, and customer 7 now appears,
+    and customer 1 has been upgraded to GOLD loyalty tier.
+*/
+SELECT 
+    *
+FROM CUSTOMER;
+
+
+
+/* 
+    Truck 4 is in MAINTENANCE and Truck 1 has a new franchisee,
+    and Truck 5 has arrived.
+*/
+SELECT
+    *
+FROM TRUCK;
+
+
+
+/*
+    NEXT STEPS: 
+
+    1.  Issue the initial DBT commands: (The snapshot MUST run first, as the 
+        dimas and facts are built on top)
+            dbt snapshot
+            dbt build
+    2.  Explore the DB Catalog > DBT_TRAINING_DB > history dims and also the facts
+    3.  Run 03_day3_post_dbt.sql
+*/
+
+
