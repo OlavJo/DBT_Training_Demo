@@ -4,10 +4,10 @@
     ---------------------------------------------------------------------------- 
     Builds a deterministic hash key from one or more columns. 
     
-    This is a hand-written replacement for dbt_utils.generate_surrogate_key. 
-    It is deliberately short, because the original is short too — and seeing 
-    that is the point. There is no magic in the package, just these three 
-    decisions: 
+    This is a hand-written replacement for dbt_utils.generate_surrogate_key
+    to showcase the simplicity of writing such a macro.
+
+    Three important ideas in this macro:
     
         1. CAST EVERY FIELD TO VARCHAR. 
             Otherwise the hash of the number 1 and the hash of the string '1' 
@@ -22,17 +22,13 @@
             
         3. USE A SEPARATOR THAT CANNOT APPEAR IN THE DATA. 
             Without one, ('AB','C') and ('A','BC') produce the same string and 
-            therefore the same key. '||' is unlikely in these columns; 
-            for free text you would want something stronger. 
+            therefore the same key. '||' is unlikely in the columns of this 
+            demo.
             
-    That is the whole trick. Every surrogate key in this project runs through 
-    this macro. 
-    
     ---------------------------------------------------------------------------- 
     WHY HASH KEYS RATHER THAN A SEQUENCE? 
     
-    A fair question from anyone who has built warehouses with identity columns, 
-    and the honest answer is that it is a trade-off, not a free win. 
+    This is a trade-off, not a clear win either way.
     
     You lose: compact integers, natural insert ordering, and the ability to 
     tell at a glance which row arrived first. 

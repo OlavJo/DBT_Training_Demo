@@ -1,24 +1,14 @@
 /* 
     =========================================================================== 
-    EVIDENCE 08 — Querying the semantic view 
+    05_semantic_view_queries.sql Querying the semantic view 
     --------------------------------------------------------------------------- 
     RUN AS: DBT_TRAINING_ANALYST 
     WHEN: After `dbt run-operation create_semantic_view`. 
     --------------------------------------------------------------------------- 
-    The capstone. Everything before this was building a clean star schema; 
-    this is what the clean star schema buys you. 
-    
-    The point to make: the semantic view definition in 
-    macros/create_semantic_view.sql took about eighty lines and almost no 
-    thought, because every relationship it declares maps to a foreign key that 
-    already exists, and every dimension it exposes is already a named, 
-    documented column on a conformed dimension. 
-    
-    Try to write the same thing over a flat, wide "one big table" mart — the 
-    kind the original Snowflake tutorial produces — and the RELATIONSHIPS 
-    clause has nothing to point at. Dimensional modelling is not a legacy 
-    habit to be apologised for; it is the prerequisite for the AI and BI layer 
-    working at all. 
+    Everything before this about dbt building a clean star schema. The SEMANTIC 
+    VIEW is not a "view" in the usual sense. It provides METADATA characterising 
+    the entire data mart, and it empowers both the BI and AI layers to generate 
+    consistent and correct queries. 
     =========================================================================== 
 */
 
@@ -38,13 +28,6 @@ describe semantic view DBT_TRAINING_DB.DEV_MARTS.TASTY_BYTES_SALES;
 -- 2. Total revenue and order count. No joins, no group by, no knowledge of
 -- the underlying tables required.
 -- ---------------------------------------------------------------------------
-/*select *
-from semantic_view( 
-        DBT_TRAINING_DB.DEV_MARTS.TASTY_BYTES_SALES 
-        metrics (total_revenue, order_count, avg_order_value)
-    )
-;
-*/
 
 SELECT 
     AGG(total_revenue),
@@ -57,16 +40,6 @@ FROM DBT_TRAINING_DB.DEV_MARTS.TASTY_BYTES_SALES;
 -- 3. Revenue by truck. The join to dim_truck is implied by the relationship
 -- declared in the semantic view — the query does not mention it.
 -- ---------------------------------------------------------------------------
-/*
-select *
-from semantic_view( 
-        DBT_TRAINING_DB.DEV_MARTS.TASTY_BYTES_SALES 
-        metrics (total_revenue, total_units, order_count) 
-        dimensions (truck_name)
-    )
-order by total_revenue desc
-;
-*/
 
 SELECT 
     truck_name,
@@ -82,18 +55,6 @@ ORDER BY total_revenue DESC;
 -- 4. Margin by menu category and day of week. Three tables joined, and the
 -- query names none of them.
 -- ---------------------------------------------------------------------------
-/*
-select *
-from semantic_view( 
-        DBT_TRAINING_DB.DEV_MARTS.TASTY_BYTES_SALES 
-        metrics (total_revenue, total_margin, gross_margin_pct) 
-        dimensions (item_category, day_of_week_name)
-    )
-order by 
-    item_category, 
-    day_of_week_name
-;
-*/
 
 SELECT 
     item_category,
@@ -113,9 +74,8 @@ ORDER BY
 -- ---------------------------------------------------------------------------
 -- 5. Revenue by customer city and loyalty tier.
 --
--- IMPORTANT AND WORTH SAYING ALOUD: this semantic view is built over
--- dim_customer, so it uses CURRENT-STATE attribution. Customer 3's
--- February revenue appears under Denver.
+-- NOTE: this semantic view is built over dim_customer, so it uses 
+-- CURRENT-STATE attribution. Customer 3's February revenue appears under Denver.
 --
 -- That is a deliberate choice, and the right default for a
 -- business-user-facing BI layer — people asking questions in natural
@@ -126,23 +86,10 @@ ORDER BY
 -- instead. Publishing both, clearly named, is better than publishing one
 -- and letting people assume.
 --
--- This is the moment to point out that a semantic layer does not remove
--- the need to understand the model underneath. It makes a modelling
--- decision easier to consume — and easier to consume WRONGLY if nobody
--- wrote down which question it answers.
+-- A semantic layer does not remove the need to understand the model underneath. 
+-- It makes a modelling decision easier to consume — and easier to consume 
+-- WRONGLY if nobody wrote down which question it answers.
 -- ---------------------------------------------------------------------------
-/*
-select *
-from semantic_view( 
-        DBT_TRAINING_DB.DEV_MARTS.TASTY_BYTES_SALES 
-        metrics (total_revenue, order_count) 
-        dimensions (customer_city, loyalty_tier)
-    )
-order by 
-    customer_city, 
-    loyalty_tier
-;
-*/
 
 SELECT 
     customer_city,
@@ -161,16 +108,6 @@ ORDER BY
 -- ---------------------------------------------------------------------------
 -- 6. Daily trend.
 -- ---------------------------------------------------------------------------
-/*
-select *
-from semantic_view( 
-        DBT_TRAINING_DB.DEV_MARTS.TASTY_BYTES_SALES 
-        metrics (total_revenue, order_count, total_units) 
-        dimensions (order_date)
-    )
-order by order_date
-;
-*/
 
 SELECT 
     order_date,
@@ -200,19 +137,35 @@ ORDER BY order_date;
     
     Then — and this is the part worth doing — open the generated SQL. 
     
-    It will be a `SELECT ... FROM SEMANTIC_VIEW(...)` statement using the 
-    metrics and dimensions defined in the macro. The synonyms declared there 
-    ('sales', 'AOV', 'operator', 'weekday') are what let it map casual English 
-    onto the right column. 
+    It will be a `SELECT ... FROM SEMANTIC_VIEW...` statement using the 
+    metrics and dimensions defined there. The synonyms declared  
+    ('sales', 'AOV', 'operator', 'weekday') are what let it map casual 
+    English onto the right column. 
     
-    The honest summary for the room: the quality of the answers is a direct 
-    function of the quality of the model and the comments. A well-named, 
-    well-documented star schema produces good natural-language answers. A 
-    sprawl of wide tables with columns called FLAG_1 and AMT_2 produces 
-    confident nonsense. 
+    The quality of the answers is a direct function of the quality of the 
+    model and the comments. A well-named, well-documented star schema 
+    produces good natural-language answers.
     
-    Which makes the closing argument nicely circular: the dimensional 
-    modelling discipline this team already has is not obsolete in the age of 
-    AI tooling. It is the thing that makes the AI tooling work. 
+    Good dimensional modelling is the thing that makes AI tooling work. 
     =========================================================================== 
+*/
+
+/*
+    ===========================================================================
+    AI support for using dbt in Snowflake
+    ---------------------------------------------------------------------------
+
+    Cortex Code (Claude) has read and modelled (in the neural network) almost 
+    every document written about dbt, and there are plenty - dbt originated 
+    in 2016. It is now is widely considered the most popular and dominant 
+    framework for building data marts and handling in-warehouse transformations 
+    in the modern data stack.
+
+    This demo has been iterated and refined using AI as a pair-programming 
+    partner. Knowing the framework and using AI to assist with the dbt project
+    configuration makes the routine components straight-forward to build. 
+    
+    DBT itself is 100% standard Python / Rust code and so running 
+    the framework in dev and test environments proves the correctness of the 
+    configuration. No AI is involved in the actual running of the pipelines.
 */

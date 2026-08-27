@@ -4,23 +4,20 @@
     ---------------------------------------------------------------------------- 
     Creates a Snowflake SEMANTIC VIEW over the finished star schema. 
     
-    Run it with: dbt run-operation create_semantic_view 
+    Run it with: 
+        dbt run-operation create_semantic_view 
     
-    ---------------------------------------------------------------------------- 
-    WHY A MACRO RATHER THAN A MODEL 
+    A semantic view is NOT A TABLE OR A VIEW, so it is not one of dbt's 
+    materializations and cannot be a model. 
     
-    A semantic view is not a table or a view, so it is not one of dbt's 
-    materializations and cannot be a model. `run-operation` is dbt's escape 
-    hatch for exactly this: platform objects dbt does not natively model, but 
-    which still belong in the project, in version control, beside the models 
-    they depend on. 
-    
-    That pattern generalises. Row access policies, masking policies, tasks, 
+    `run-operation` is dbt's hook into platform objects that dbt does not natively 
+    model, but which still belong in the project, in version control, beside the 
+    models they depend on. Row access policies, masking policies, tasks, 
     streams, alerts — all of them can live in macros and be applied from the 
-    same repository as the models they protect. 
+    same repository as the models they are related to. 
     
     ---------------------------------------------------------------------------- 
-    WHY THIS IS SHORT 
+    WHY THIS IS EASY 
     
     The semantic view below is almost trivial to write, and that is the whole 
     argument for the modelling work that preceded it. Every RELATIONSHIP maps 
@@ -28,18 +25,12 @@
     is already a clean, named, documented column on a conformed dimension. 
     Nothing needs to be reshaped, decoded or disambiguated here. 
     
-    Try writing this clause against a flat, wide "one big table" mart and the 
-    RELATIONSHIPS section has nothing to point at. Good dimensional modelling 
-    is what makes the AI and BI layer possible — the semantic view is the 
-    payoff for the star schema, not a substitute for it. 
-    
+    The semantic view is the payoff for the star schema built by dbt.
     ---------------------------------------------------------------------------- 
     FACTS vs METRICS
     
     FACTS are ROW-LEVEL expressions. `quantity * unit_price` for one line. 
     METRICS are AGGREGATIONS over facts. `SUM(...)` across many lines. 
-    
-    Put an aggregate in FACTS and it will not behave as you expect. 
     ============================================================================
 -#}
 

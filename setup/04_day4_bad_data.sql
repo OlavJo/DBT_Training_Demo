@@ -5,7 +5,7 @@
     --------------------------------------------------------------------------- 
     Everything so far has worked. This script breaks the pipeline on purpose. 
     
-    The lesson is the difference between: 
+    NOTE the difference between: 
     
         dbt run && dbt test             build everything, THEN check it 
         dbt build                       check as you go, and STOP on failure 
@@ -17,12 +17,11 @@
     With `build`, dbt interleaves models and tests in dependency order. When a 
     test fails, everything DOWNSTREAM of it is SKIPPED. The bad data never 
     reaches the mart. The dashboard shows yesterday's numbers, which are 
-    correct, instead of today's, which are not. 
+    correct, instead of today's, which are not:
     
-    That distinction is worth ten minutes. "Stale but right" beats "fresh but 
-    wrong" in almost every business context, and `dbt build` is how you choose 
-    it. This is also the argument that lands with anyone who has shipped a bad 
-    dimension load on a Sunday night. 
+        "Stale but right" beats "fresh but wrong" 
+        
+    in almost every business context.
     =========================================================================== */
     
 USE ROLE DBT_TRAINING_INGEST;
@@ -34,7 +33,7 @@ USE SCHEMA DBT_TRAINING_DB.RAW;
     BREAKAGE 1 — an order line pointing at a menu item that does not exist. 
     
     Menu item 999 has never existed. This violates the `relationships` test on 
-    stg_order_lines.menu_item_id. 
+        stg_order_lines.menu_item_id. 
     
     Without the test, this row would sail through to fct_order_lines with a 
     null item_name, null category and — because the cost join fails — a 
@@ -137,8 +136,8 @@ INSERT INTO CUSTOMER (
     NOW RUN: dbt build 
     
     Expected: several test FAILURES, and — the important part — a run summary 
-    showing models SKIPPED. Read the skip list out loud. Those are the models 
-    that would have contained wrong numbers. 
+    showing models SKIPPED. Those are the models that would have contained 
+    wrong numbers. 
     
     Then: 
         dbt build --select stg_order_lines+         to see the blast radius 
@@ -152,17 +151,6 @@ INSERT INTO CUSTOMER (
 DELETE FROM ORDER_LINE WHERE ORDER_LINE_ID IN (10501, 10502);
 DELETE FROM ORDER_HEADER WHERE ORDER_ID = 1050;
 DELETE FROM CUSTOMER WHERE CUSTOMER_ID = 6 AND LOYALTY_TIER = 'SILVER';
-    
--- then: dbt build
 */
 
-/*  --------------------------------------------------------------------------- 
-    A CLOSING POINT WORTH MAKING 
-    
-    Note what did NOT happen. No model was corrupted. No partial data reached 
-    the marts. The snapshot was not touched. Nothing needed to be restored. 
-    The pipeline refused to build on top of data it could not trust, and left 
-    the previous good state in place. That behaviour is not automatic — it is 
-    the product of tests existing at the right layer and of using `dbt build` 
-    rather than `dbt run`. 
-    --------------------------------------------------------------------------- */
+
