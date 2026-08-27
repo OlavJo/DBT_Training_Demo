@@ -27,7 +27,7 @@ transformations in the modern data stack.
 
  - **Massive Adoption:**
 
-   Tens of thousands of data teams globally use dbt in production,
+   Since the open source release in 2017, tens of thousands of data teams globally use dbt in production,
    supported by a massive community and ecosystem.
 
 
